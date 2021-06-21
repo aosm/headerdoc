@@ -13,7 +13,7 @@ $135|/*!
     This class contains methods whose return types contain symbols that
     contain (but are not equal to) static and virtual.
  */
-$0|$17440|-=: TOP LEVEL COMMENT PARSE VALUES :=-
+$0|$17731|-=: TOP LEVEL COMMENT PARSE VALUES :=-
 inHeader: 0
 inClass: 0
 inInterface: 0
@@ -41,9 +41,12 @@ inputCounter: 0
 blockOffset: 0
 fullpath: /test_suite_bogus_path/static_and_virtual_in_return_types.test
 -=: BLOCKPARSE PARSER STATE KEYS :=-
+$parserState->{ASLBRACEPRECURSOR} => 
+$parserState->{ASLBRACEPRECURSORTAG} => 
 $parserState->{FULLPATH} => /test_suite_bogus_path/static_and_virtual_in_return_types.test
 $parserState->{ISFORWARDDECLARATION} => 0
 $parserState->{NEXTTOKENNOCPP} => 0
+$parserState->{afterNL} => 2
 $parserState->{availability} => 
 $parserState->{backslashcount} => 0
 $parserState->{basetype} => 
@@ -86,8 +89,10 @@ $parserState->{occmethod} => 0
 $parserState->{occmethodname} => 
 $parserState->{occparmlabelfound} => 2
 $parserState->{onlyComments} => 0
+$parserState->{parsedParamAtBrace} => ARRAY(OBJID)
 $parserState->{parsedParamList} => ARRAY(OBJID)
 $parserState->{parsedParamParse} => 1
+$parserState->{parsedParamStateAtBrace} => ARRAY(OBJID)
 $parserState->{posstypes} => 
 $parserState->{posstypesPending} => 0
 $parserState->{pplStack} => ARRAY(OBJID)
@@ -234,7 +239,7 @@ LONG ATTRIBUTES:
     IS BLOCK: 
     OBJECT TYPE: HeaderDoc::CPPClass
     NAME: static_and_virtual_in_return_types_class
-    APIUID: 
+    APIUID: //test_ref/cpp/cl/static_and_virtual_in_return_types_class
     ABSTRACT: ""
     DISCUSSION: "<p>This class contains methods whose return types contain symbols that
 contain (but are not equal to) static and virtual.
@@ -291,7 +296,7 @@ contain (but are not equal to) static and virtual.
         XMLTHROWS: ""
         UPDATED: ""
         LINKAGESTATE: ""
-        ACCESSCONTROL: ""
+        ACCESSCONTROL: "protected"
         AVAILABILITY: ""
         LINKUID: ""
         ORIGCLASS: ""
@@ -375,7 +380,7 @@ contain (but are not equal to) static and virtual.
         XMLTHROWS: ""
         UPDATED: ""
         LINKAGESTATE: ""
-        ACCESSCONTROL: ""
+        ACCESSCONTROL: "protected"
         AVAILABILITY: ""
         LINKUID: ""
         ORIGCLASS: ""
@@ -585,7 +590,7 @@ END OF OBJECT
 
 
 
-$17440|-=: TOP LEVEL COMMENT PARSE VALUES :=-
+$17731|-=: TOP LEVEL COMMENT PARSE VALUES :=-
 inHeader: 0
 inClass: 0
 inInterface: 0
@@ -613,9 +618,12 @@ inputCounter: 0
 blockOffset: 0
 fullpath: /test_suite_bogus_path/static_and_virtual_in_return_types.test
 -=: BLOCKPARSE PARSER STATE KEYS :=-
+$parserState->{ASLBRACEPRECURSOR} => 
+$parserState->{ASLBRACEPRECURSORTAG} => 
 $parserState->{FULLPATH} => /test_suite_bogus_path/static_and_virtual_in_return_types.test
 $parserState->{ISFORWARDDECLARATION} => 0
 $parserState->{NEXTTOKENNOCPP} => 0
+$parserState->{afterNL} => 2
 $parserState->{availability} => 
 $parserState->{backslashcount} => 0
 $parserState->{basetype} => 
@@ -658,8 +666,10 @@ $parserState->{occmethod} => 0
 $parserState->{occmethodname} => 
 $parserState->{occparmlabelfound} => 2
 $parserState->{onlyComments} => 0
+$parserState->{parsedParamAtBrace} => ARRAY(OBJID)
 $parserState->{parsedParamList} => ARRAY(OBJID)
 $parserState->{parsedParamParse} => 1
+$parserState->{parsedParamStateAtBrace} => ARRAY(OBJID)
 $parserState->{posstypes} => 
 $parserState->{posstypesPending} => 0
 $parserState->{pplStack} => ARRAY(OBJID)
@@ -806,7 +816,7 @@ LONG ATTRIBUTES:
     IS BLOCK: 
     OBJECT TYPE: HeaderDoc::CPPClass
     NAME: static_and_virtual_in_return_types_class
-    APIUID: 
+    APIUID: //test_ref/cpp/cl/static_and_virtual_in_return_types_class
     ABSTRACT: ""
     DISCUSSION: "<p>This class contains methods whose return types contain symbols that
 contain (but are not equal to) static and virtual.
@@ -863,7 +873,7 @@ contain (but are not equal to) static and virtual.
         XMLTHROWS: ""
         UPDATED: ""
         LINKAGESTATE: ""
-        ACCESSCONTROL: ""
+        ACCESSCONTROL: "protected"
         AVAILABILITY: ""
         LINKUID: ""
         ORIGCLASS: ""
@@ -947,7 +957,7 @@ contain (but are not equal to) static and virtual.
         XMLTHROWS: ""
         UPDATED: ""
         LINKAGESTATE: ""
-        ACCESSCONTROL: ""
+        ACCESSCONTROL: "protected"
         AVAILABILITY: ""
         LINKUID: ""
         ORIGCLASS: ""

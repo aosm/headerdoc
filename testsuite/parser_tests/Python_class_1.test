@@ -25,7 +25,7 @@ def baz(bat):
     print bat
 
 $23|        Python_class_1
-$0|$21117|-=: TOP LEVEL COMMENT PARSE VALUES :=-
+$0|$21870|-=: TOP LEVEL COMMENT PARSE VALUES :=-
 inHeader: 0
 inClass: 0
 inInterface: 0
@@ -54,6 +54,7 @@ blockOffset: 0
 fullpath: /test_suite_bogus_path/Python_class_1.test
 -=: BLOCKPARSE PARSER STATE KEYS :=-
 $parserState->{FULLPATH} => /test_suite_bogus_path/Python_class_1.test
+$parserState->{afterNL} => 2
 $parserState->{autoContinue} => 1
 $parserState->{availability} => 
 $parserState->{backslashcount} => 0
@@ -100,8 +101,10 @@ $parserState->{occmethod} => 0
 $parserState->{occmethodname} => 
 $parserState->{onlyComments} => 0
 $parserState->{parsedParam} => 
+$parserState->{parsedParamAtBrace} => ARRAY(OBJID)
 $parserState->{parsedParamList} => ARRAY(OBJID)
 $parserState->{parsedParamParse} => 0
+$parserState->{parsedParamStateAtBrace} => ARRAY(OBJID)
 $parserState->{popAfter} => 0
 $parserState->{popAtEnd} => 1
 $parserState->{posstypes} => 
@@ -112,6 +115,7 @@ $parserState->{preTemplateSymbol} =>
 $parserState->{pushParserStateOnBrace} => 3
 $parserState->{returntype} => 
 $parserState->{seenBraces} => 1
+$parserState->{seenLeading} => 0
 $parserState->{seenMacroPart} => 0
 $parserState->{seenTilde} => 0
 $parserState->{seenToken} => 1
@@ -169,8 +173,10 @@ Parsed Param 0 => UserDict
 |   |   +---__init__
 |   |   +---[ NEWLINE ]
 |   |   +---    
+|   |   +---    
 |   |   +---"""
 |   +---[ NEWLINE ]
+|   +---    
 |   +---    
 |   +-*-def (HAS STATE)
 |   +--- 
@@ -193,8 +199,10 @@ Parsed Param 0 => UserDict
 |   |   +---[ NEWLINE ]
 |   |   +---    
 -=-=-=-=-=-=- EODEC -=-=-=-=-=-=-
+|   +---    
 |   +---"""
 |   |   +---[ NEWLINE ]
+|   |   +---    
 |   |   +---    
 |   |   +---!headerdoc!
 |   |   +---[ NEWLINE ]
@@ -205,8 +213,10 @@ Parsed Param 0 => UserDict
 |   |   +---comment
 |   |   +---[ NEWLINE ]
 |   |   +---    
+|   |   +---    
 |   |   +---"""
 |   +---[ NEWLINE ]
+|   +---    
 |   +---    
 |   +-*-var_1 (HAS STATE)
 |   +--- 
@@ -214,22 +224,26 @@ Parsed Param 0 => UserDict
 |   +--- 
 |   +---3
 |   +---[ NEWLINE ]
-|   +---[ NEWLINE ]
+|   +---    
 |   +---    
 |   +---"""
 |   |   +---[ NEWLINE ]
 |   |   +---    
+|   |   +---    
 |   |   +---!headerdoc!
 |   |   +---[ NEWLINE ]
 |   |   +---        
+|   |   +---    
 |   |   +---Python_class_1
 |   |   +---:
 |   |   +---:
 |   |   +---foo
 |   |   +---[ NEWLINE ]
 |   |   +---    
+|   |   +---    
 |   |   +---"""
 |   +---[ NEWLINE ]
+|   +---    
 |   +---    
 |   +-*-def (HAS STATE)
 |   +--- 
@@ -240,6 +254,7 @@ Parsed Param 0 => UserDict
 |   +---:
 |   |   +---[ NEWLINE ]
 |   |   +---        
+|   |   +---    
 |   |   +---print
 |   |   +--- 
 |   |   +---bar
@@ -299,7 +314,7 @@ LONG ATTRIBUTES:
     IS BLOCK: 
     OBJECT TYPE: HeaderDoc::CPPClass
     NAME: Python_class_1
-    APIUID: 
+    APIUID: //test_ref/python/cl/Python_class_1
     ABSTRACT: ""
     DISCUSSION: "<p>Python_class_1
 "
@@ -345,7 +360,7 @@ LONG ATTRIBUTES:
         APIUID: //test_ref/python/instm/Python_class_1/__init__//(self,filename)
         ABSTRACT: ""
         DISCUSSION: "<p>Python_class_1::__init__
-    "
+        "
         UPDATED: ""
         COPYRIGHT: ""
         HTMLMETA: ""
@@ -472,7 +487,7 @@ LONG ATTRIBUTES:
         APIUID: //test_ref/python/instm/Python_class_1/foo//(bar)
         ABSTRACT: ""
         DISCUSSION: "<p>Python_class_1::foo
-    "
+        "
         UPDATED: ""
         COPYRIGHT: ""
         HTMLMETA: ""
@@ -558,7 +573,7 @@ LONG ATTRIBUTES:
         APIUID: //test_ref/python/data/Python_class_1/var_1
         ABSTRACT: ""
         DISCUSSION: "<p>var_1 comment
-    "
+        "
         UPDATED: ""
         COPYRIGHT: ""
         HTMLMETA: ""
@@ -617,8 +632,10 @@ OBJECT: Python_class_1 (HeaderDoc::CPPClass)
 |   |   +---__init__
 |   |   +---[ NEWLINE ]
 |   |   +---    
+|   |   +---    
 |   |   +---"""
 |   +---[ NEWLINE ]
+|   +---    
 |   +---    
 |   +-*-def (HAS STATE)
 |   +--- 
@@ -641,8 +658,10 @@ OBJECT: Python_class_1 (HeaderDoc::CPPClass)
 |   |   +---[ NEWLINE ]
 |   |   +---    
 -=-=-=-=-=-=- EODEC -=-=-=-=-=-=-
+|   +---    
 |   +---"""
 |   |   +---[ NEWLINE ]
+|   |   +---    
 |   |   +---    
 |   |   +---!headerdoc!
 |   |   +---[ NEWLINE ]
@@ -653,8 +672,10 @@ OBJECT: Python_class_1 (HeaderDoc::CPPClass)
 |   |   +---comment
 |   |   +---[ NEWLINE ]
 |   |   +---    
+|   |   +---    
 |   |   +---"""
 |   +---[ NEWLINE ]
+|   +---    
 |   +---    
 |   +-*-var_1 (HAS STATE)
 |   +--- 
@@ -662,22 +683,26 @@ OBJECT: Python_class_1 (HeaderDoc::CPPClass)
 |   +--- 
 |   +---3
 |   +---[ NEWLINE ]
-|   +---[ NEWLINE ]
+|   +---    
 |   +---    
 |   +---"""
 |   |   +---[ NEWLINE ]
 |   |   +---    
+|   |   +---    
 |   |   +---!headerdoc!
 |   |   +---[ NEWLINE ]
 |   |   +---        
+|   |   +---    
 |   |   +---Python_class_1
 |   |   +---:
 |   |   +---:
 |   |   +---foo
 |   |   +---[ NEWLINE ]
 |   |   +---    
+|   |   +---    
 |   |   +---"""
 |   +---[ NEWLINE ]
+|   +---    
 |   +---    
 |   +-*-def (HAS STATE)
 |   +--- 
@@ -688,6 +713,7 @@ OBJECT: Python_class_1 (HeaderDoc::CPPClass)
 |   +---:
 |   |   +---[ NEWLINE ]
 |   |   +---        
+|   |   +---    
 |   |   +---print
 |   |   +--- 
 |   |   +---bar
@@ -718,8 +744,10 @@ OBJECT: __init__ (HeaderDoc::Function)
 |   +---[ NEWLINE ]
 |   +---    
 -=-=-=-=-=-=- EODEC -=-=-=-=-=-=-
++---    
 +---"""
 |   +---[ NEWLINE ]
+|   +---    
 |   +---    
 |   +---!headerdoc!
 |   +---[ NEWLINE ]
@@ -730,8 +758,10 @@ OBJECT: __init__ (HeaderDoc::Function)
 |   +---comment
 |   +---[ NEWLINE ]
 |   +---    
+|   +---    
 |   +---"""
 +---[ NEWLINE ]
++---    
 +---    
 +-*-var_1 (HAS STATE)
 +--- 
@@ -739,22 +769,26 @@ OBJECT: __init__ (HeaderDoc::Function)
 +--- 
 +---3
 +---[ NEWLINE ]
-+---[ NEWLINE ]
++---    
 +---    
 +---"""
 |   +---[ NEWLINE ]
 |   +---    
+|   +---    
 |   +---!headerdoc!
 |   +---[ NEWLINE ]
 |   +---        
+|   +---    
 |   +---Python_class_1
 |   +---:
 |   +---:
 |   +---foo
 |   +---[ NEWLINE ]
 |   +---    
+|   +---    
 |   +---"""
 +---[ NEWLINE ]
++---    
 +---    
 +-*-def (HAS STATE)
 +--- 
@@ -765,6 +799,7 @@ OBJECT: __init__ (HeaderDoc::Function)
 +---:
 |   +---[ NEWLINE ]
 |   +---        
+|   +---    
 |   +---print
 |   +--- 
 |   +---bar
@@ -783,6 +818,7 @@ OBJECT: foo (HeaderDoc::Function)
 +---:
 |   +---[ NEWLINE ]
 |   +---        
+|   +---    
 |   +---print
 |   +--- 
 |   +---bar
@@ -799,23 +835,27 @@ OBJECT: var_1 (HeaderDoc::Var)
 +--- 
 +---3
 +---[ NEWLINE ]
++---    
 -=-=-=-=-=-=- EODEC -=-=-=-=-=-=-
-+---[ NEWLINE ]
 +---    
 +---"""
 |   +---[ NEWLINE ]
 |   +---    
+|   +---    
 |   +---!headerdoc!
 |   +---[ NEWLINE ]
 |   +---        
+|   +---    
 |   +---Python_class_1
 |   +---:
 |   +---:
 |   +---foo
 |   +---[ NEWLINE ]
 |   +---    
+|   +---    
 |   +---"""
 +---[ NEWLINE ]
++---    
 +---    
 +-*-def (HAS STATE)
 +--- 
@@ -826,6 +866,7 @@ OBJECT: var_1 (HeaderDoc::Var)
 +---:
 |   +---[ NEWLINE ]
 |   +---        
+|   +---    
 |   +---print
 |   +--- 
 |   +---bar
@@ -840,18 +881,17 @@ OBJECT: Python_class_1 (HeaderDoc::CPPClass)
 	<span class="keyword">class</span> <!-- a logicalPath="//test_ref/python/instm/Python_class_1 //test_ref/python/clm/Python_class_1 //test_ref/python/intfcm/Python_class_1 //test_ref/python/intfm/Python_class_1 //test_ref/python/func/Python_class_1 //test_ref/python/ftmplt/Python_class_1 //test_ref/python/defn/Python_class_1 //test_ref/python/macro/Python_class_1 //test_ref/doc/anysymbol/Python_class_1" machineGenerated="true" --><span class="function">Python_class_1</span><!-- /a -->(<span class="param">UserDict</span>)<span class="comment">"""
 	            !headerdoc!
 	            Python_class_1::__init__
-	    """
-	    <span class="keyword">def</span> <!-- a logicalPath="//test_ref/python/instm/__init__ //test_ref/python/clm/__init__ //test_ref/python/intfcm/__init__ //test_ref/python/intfm/__init__ //test_ref/python/func/__init__ //test_ref/python/ftmplt/__init__ //test_ref/python/defn/__init__ //test_ref/python/macro/__init__ //test_ref/doc/anysymbol/__init__" machineGenerated="true" --><span class="function">__init__</span><!-- /a -->(<span class="param">self</span>, <span class="param">filename</span>=<span class="param">None</span>)<span class="comment">"""
-	    !headerdoc!
+	        """
+	        <span class="keyword">def</span> <!-- a logicalPath="//test_ref/python/instm/__init__ //test_ref/python/clm/__init__ //test_ref/python/intfcm/__init__ //test_ref/python/intfm/__init__ //test_ref/python/func/__init__ //test_ref/python/ftmplt/__init__ //test_ref/python/defn/__init__ //test_ref/python/macro/__init__ //test_ref/doc/anysymbol/__init__" machineGenerated="true" --><span class="function">__init__</span><!-- /a -->(<span class="param">self</span>, <span class="param">filename</span>=<span class="param">None</span>)<span class="comment">"""
+	        !headerdoc!
 	            var_1 comment
-	    """
-	    <span class="param">var_1</span> = <span class="number">3</span>
-	
-	    <span class="comment">"""
-	    !headerdoc!
-	        Python_class_1::foo
-	    """
-	    <span class="keyword">def</span> <!-- a logicalPath="//test_ref/python/instm/foo //test_ref/python/clm/foo //test_ref/python/intfcm/foo //test_ref/python/intfm/foo //test_ref/python/func/foo //test_ref/python/ftmplt/foo //test_ref/python/defn/foo //test_ref/python/macro/foo //test_ref/doc/anysymbol/foo" machineGenerated="true" --><span class="function">foo</span><!-- /a -->(<span class="param">bar</span>)
+	        """
+	        <span class="param">var_1</span> = <span class="number">3</span>
+	        <span class="comment">"""
+	        !headerdoc!
+	            Python_class_1::foo
+	        """
+	        <span class="keyword">def</span> <!-- a logicalPath="//test_ref/python/instm/foo //test_ref/python/clm/foo //test_ref/python/intfcm/foo //test_ref/python/intfm/foo //test_ref/python/func/foo //test_ref/python/ftmplt/foo //test_ref/python/defn/foo //test_ref/python/macro/foo //test_ref/doc/anysymbol/foo" machineGenerated="true" --><span class="function">foo</span><!-- /a -->(<span class="param">bar</span>)
 END OF OBJECT
 
 
@@ -867,6 +907,7 @@ END OF OBJECT
 
 OBJECT: var_1 (HeaderDoc::Var)
 	<!-- a logicalPath="//test_ref/python/econst/var_1 //test_ref/python/data/Python_class_1/var_1 //test_ref/python/data/var_1 //test_ref/python/clconst/Python_class_1/var_1 " machineGenerated="true" --><span class="var">var_1</span><!-- /a --> = <span class="number">3</span>
+	    
 END OF OBJECT
 
 

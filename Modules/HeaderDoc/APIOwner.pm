@@ -3,7 +3,7 @@
 # Class name: APIOwner
 # Synopsis: Abstract superclass for Header and OO structures
 #
-# Last Updated: $Date: 2011/05/18 12:09:34 $
+# Last Updated: $Date: 2014/02/25 14:46:13 $
 # 
 # Method additions by SKoT McDonald <skot@tomandandy.com> Aug 2001 
 #
@@ -74,6 +74,11 @@
 #         Contains an array of names of functions to "also include" in
 #         the documentation for this class/pseudoclass.  Mainly intended
 #         for applying class-like behavior to procedural languages.
+#     @var APPLEREFUSED
+#         A reference to a hash containing API references that have been
+#         emitted already in the context of this API owner.  This is
+#         needed so that it can be reset if a class is re-emitted (after
+#         category folding, for example).
 #     @var CATEGORIES
 #         An array of
 #         {@link //apple_ref/perl/cl/HeaderDoc::ObjCCategory ObjCCategory}
@@ -208,7 +213,6 @@ BEGIN {
 }
 use HeaderDoc::HeaderElement;
 use HeaderDoc::Group;
-use HeaderDoc::DBLookup;
 use HeaderDoc::Utilities qw(findRelativePath safeName getAPINameAndDisc printArray printHash resolveLink sanitize dereferenceUIDObject validTag objName byLinkage byAccessControl objGroup linkageAndObjName byMethodType html_fixup_links xml_fixup_links calcDepth);
 use HeaderDoc::BlockParse qw(blockParseOutside);
 use File::Basename;
@@ -225,7 +229,7 @@ use vars qw(@ISA);
 #         In the git repository, contains the number of seconds since
 #         January 1, 1970.
 #  */
-$HeaderDoc::APIOwner::VERSION = '$Revision: 1305745774 $';
+$HeaderDoc::APIOwner::VERSION = '$Revision: 1393368373 $';
 
 my $addToDebug = 0;
 
@@ -1461,7 +1465,7 @@ sub tocStringSubForClasses
 			    } elsif ($HeaderDoc::use_iframes) {
 	        		$tocString .= "<nobr>$entrypreface<a href=\"$class_baseref#$urlname\" target=\"_top\">$name</a></nobr><br>\n";
 			    } else {
-	        		$tocString .= "<nobr>$entrypreface<a href=\"$class_baseref#$urlname\" target=\"doc\">$name</a></nobr><br>\n";
+	        		$tocString .= "<nobr>$entrypreface<a href=\"$class_baseref#$urlname\" target=\"_top\">$name</a></nobr><br>\n";
 			    }
 			} else {
 			}
@@ -3484,8 +3488,10 @@ sub createTOCFile {
 #     @abstract
 #         Generates the content HTML file (right-side frame).
 #     @discussion
-#         In "class as composite" mode, this function writes
-#         all of the right-side frames into a single file.
+#         In "class as composite" mode, this function does not
+#         get called.  Instead, {@link writeHeaderElementsToCompositePage}
+#         is used.
+#
 #         Otherwise, this function just writes the introduction
 #         for the header or class itself, and the other
 #         right-side content is written later by a call to
@@ -3818,12 +3824,58 @@ sub writeFunctionListToStdOut {
     return;
 }
 
+# /*! 
+#     @abstract
+#         Recursively ensures that the {@link apirefSetup} method has been called 
+#         on everything that might get emitted later.
+#  */
+sub setupAPIReferences {
+
+    my $self = shift;
+
+    my @functions = $self->functions();
+    my @methods = $self->methods();
+    my @constants = $self->constants();
+    my @typedefs = $self->typedefs();
+    my @structs = $self->structs();
+    my @vars = $self->vars();
+    my @local_vars = ();
+    if ($self->can("variables")) { @local_vars = $self->variables(); }
+    my @enums = $self->enums();
+    my @pDefines = $self->pDefines();
+    my @classes = $self->classes();
+    my @categories = $self->categories();
+    my @protocols = $self->protocols();
+    my @properties = $self->props();
+
+    # pre-process everything to make sure we don't have any unregistered
+    # api refs.
+    my $prevignore = $HeaderDoc::ignore_apiuid_errors;
+    $HeaderDoc::ignore_apiuid_errors = 1;
+
+    my $junk = "";
+    if (@functions) { foreach my $obj (@functions) { $junk = $obj->apirefSetup();}}
+    if (@methods) { foreach my $obj (@methods) { $junk = $obj->apirefSetup();}}
+    if (@constants) { foreach my $obj (@constants) { $junk = $obj->apirefSetup();}}
+    if (@typedefs) { foreach my $obj (@typedefs) { $junk = $obj->apirefSetup();}}
+    if (@structs) { foreach my $obj (@structs) { $junk = $obj->apirefSetup();}}
+    if (@local_vars) { foreach my $obj (@local_vars) { $junk = $obj->apirefSetup();}}
+    if (@vars) { foreach my $obj (@vars) { $junk = $obj->apirefSetup();}}
+    if (@enums) { foreach my $obj (@enums) { $junk = $obj->apirefSetup();}}
+    if (@pDefines) { foreach my $obj (@pDefines) { $junk = $obj->apirefSetup();}}
+    if (@classes) { foreach my $obj (@classes) { $junk = $obj->apirefSetup(); $junk = $obj->docNavigatorComment(); $obj->setupAPIReferences(); }}
+    if (@categories) { foreach my $obj (@categories) { $junk = $obj->apirefSetup(); $junk = $obj->docNavigatorComment(); $obj->setupAPIReferences(); }}
+    if (@protocols) { foreach my $obj (@protocols) { $junk = $obj->apirefSetup(); $junk = $obj->docNavigatorComment(); $obj->setupAPIReferences(); }}
+    if (@properties) { foreach my $obj (@properties) { $junk = $obj->apirefSetup();}}
+    $HeaderDoc::ignore_apiuid_errors = $prevignore;
+}
+
 # /*!
 #     @abstract
 #         Writes the right-side content.
 #     @discussion
 #         In "class as composite" mode, this function's
-#         purpose is handled by {@link createContentFile},
+#         purpose is handled by {@link writeHeaderElementsToCompositePage},
 #         so it does not get called.
 #
 #         Otherwise, this function writes all of the
@@ -3853,11 +3905,7 @@ sub writeHeaderElements {
 		unless (mkdir ("$rootOutputDir", 0777)) {die ("Can't create output folder $rootOutputDir. \n$!");};
     }
 
-    # pre-process everything to make sure we don't have any unregistered
-    # api refs.
     my $junk = "";
-    my $prevignore = $HeaderDoc::ignore_apiuid_errors;
-    $HeaderDoc::ignore_apiuid_errors = 1;
     my @functions = $self->functions();
     my @methods = $self->methods();
     my @constants = $self->constants();
@@ -3879,18 +3927,6 @@ sub writeHeaderElements {
 	# }
     # }
 
-    if (@functions) { foreach my $obj (@functions) { $junk = $obj->apirefSetup();}}
-    if (@methods) { foreach my $obj (@methods) { $junk = $obj->apirefSetup();}}
-    if (@constants) { foreach my $obj (@constants) { $junk = $obj->apirefSetup();}}
-    if (@typedefs) { foreach my $obj (@typedefs) { $junk = $obj->apirefSetup();}}
-    if (@structs) { foreach my $obj (@structs) { $junk = $obj->apirefSetup();}}
-    if (@local_vars) { foreach my $obj (@local_vars) { $junk = $obj->apirefSetup();}}
-    if (@vars) { foreach my $obj (@vars) { $junk = $obj->apirefSetup();}}
-    if (@enums) { foreach my $obj (@enums) { $junk = $obj->apirefSetup();}}
-    if (@pDefines) { foreach my $obj (@pDefines) { $junk = $obj->apirefSetup();}}
-    if (@classes) { foreach my $obj (@classes) { $junk = $obj->apirefSetup();}}
-    if (@properties) { foreach my $obj (@properties) { $junk = $obj->apirefSetup();}}
-    $HeaderDoc::ignore_apiuid_errors = $prevignore;
 
     if (!$HeaderDoc::ClassAsComposite) {
     
@@ -4203,8 +4239,8 @@ sub writeHeaderElementsToXMLPage { # All API in a single XML page
 #     @abstract
 #         Writes output to the composite page.
 #     @discussion
-#         In "class as composite" mode, this function is not called.
-#         The function {@link createContentFile} handles this instead.
+#         In "class as composite" mode, this function supersedes
+#         the function {@link createContentFile}.
 #     @param self
 #         The <code>APIOwner</code> object.
 #  */
@@ -4218,10 +4254,18 @@ sub writeHeaderElementsToCompositePage { # All API in a single HTML page -- for 
     # $compositePageString = $self->stripAppleRefs($compositePageString);
     my $outputFile = $rootOutputDir.$pathSeparator.$compositePageName;
 
+# print STDERR "OUTFILE: $outputFile\n";
+
 	if (! -e $rootOutputDir) {
 		unless (mkdir ("$rootOutputDir", 0777)) {die ("Can't create output folder $rootOutputDir. $!");};
     }
+
+# print STDERR "PRE: $compositePageString\n";
+
     my $processed_string = html_fixup_links($self, $compositePageString);
+
+# print STDERR "DUMP: $processed_string\n";
+
     $self->_createHTMLOutputFile($outputFile, $processed_string, "$name", 1);
 }
 
@@ -4249,8 +4293,9 @@ sub writeProtocols {
         $obj->outputDir("$protocolsRootDir$pathSeparator$protocolName");
         $obj->createFramesetFile();
         $obj->createContentFile() if (!$HeaderDoc::ClassAsComposite);
+	$obj->writeHeaderElementsToCompositePage();
         $obj->createTOCFile();
-        $obj->writeHeaderElements(); 
+        $obj->writeHeaderElements();
     }
 }
 
@@ -4278,6 +4323,7 @@ sub writeCategories {
         $obj->outputDir("$categoriesRootDir$pathSeparator$categoryName");
         $obj->createFramesetFile();
         $obj->createContentFile() if (!$HeaderDoc::ClassAsComposite);
+	$obj->writeHeaderElementsToCompositePage();
         $obj->createTOCFile();
         $obj->writeHeaderElements(); 
     }
@@ -4627,6 +4673,33 @@ sub _getFunctionXMLDetailString {
     return $contentString;
 }
 
+# /*!
+#     @abstract
+#         Returns the XML content string for classes in this class or header.
+#     @param self
+#         The <code>APIOwner</code> object.
+#     @discussion
+#         Called by {@link _getXMLPageString}.
+#  */
+sub _getEmbeddedClassXMLDetailString {
+    my $self = shift;
+    my $classObjsRef = shift;
+    my @classObjs = @{$classObjsRef};
+    my $contentString = "";
+
+    my @tempobjs = ();
+    if (!$self->unsorted()) {
+	@tempobjs = sort objName @classObjs;
+    } else {
+	@tempobjs = @classObjs;
+    }
+    foreach my $obj (@tempobjs) {
+	# print STDERR "outputting class ".$obj->name.".";
+	my $documentationBlock = $obj->XMLdocumentationBlock();
+	$contentString .= $documentationBlock;
+    }
+    return $contentString;
+}
 
 # /*!
 #     @abstract
@@ -5689,8 +5762,8 @@ sub _createXMLOutputFile {
 		$doctype = "framework";
 	}
 
-	# print OUTFILE "<!DOCTYPE $doctype PUBLIC \"-//Apple Computer//DTD HEADERDOC 1.0//EN\" \"http://www.apple.com/DTDs/HeaderDoc-1.2.dtd\">\n";
-	print OUTFILE "<!DOCTYPE $doctype PUBLIC \"-//Apple Computer//DTD HEADERDOC 1.2//EN\" \"/System/Library/DTDs/HeaderDoc-1.2.dtd\">\n";
+	# print OUTFILE "<!DOCTYPE $doctype PUBLIC \"-//Apple Computer//DTD HEADERDOC 1.6//EN\" \"http://www.apple.com/DTDs/HeaderDoc-1.6.dtd\">\n";
+	print OUTFILE "<!DOCTYPE $doctype PUBLIC \"-//Apple Computer//DTD HEADERDOC 1.6//EN\" \"/System/Library/DTDs/HeaderDoc-1.6.dtd\">\n";
 	# print OUTFILE "<header filename=\"$heading\" headerpath=\"$fullpath\" headerclass=\"\">";
 	# print OUTFILE "<name>$heading</name>\n";
 
@@ -5758,8 +5831,14 @@ sub _createHTMLOutputFile {
 
 	if ($HeaderDoc::use_iframes || $HeaderDoc::newTOC == 5) {
 	    if (!$HeaderDoc::suppressDefaultStyles) {
+		print OUTFILE $self->styleSheet(1);
 		print OUTFILE "<style><!--\n";
 		if ($HeaderDoc::newTOC == 5) {
+			print OUTFILE "body {\n";
+			print OUTFILE "    padding: 0px;\n";
+			print OUTFILE "    margin: 0px;\n";
+			print OUTFILE "    border: 0px;\n";
+			print OUTFILE "}\n";
 			print OUTFILE ".toc_contents_text {\n";
 			# print OUTFILE "    white-space: nowrap;\n";
 			print OUTFILE "    padding-left: 1em;\n";
@@ -5805,7 +5884,16 @@ sub _createHTMLOutputFile {
 			print OUTFILE ".specbox a {\n";
 			print OUTFILE "		font-size: 12px;\n";
 			print OUTFILE "}\n";
-			print OUTFILE ".disclosure_triangle_td a:hover {\n";
+			print OUTFILE ".disclosure_triangle_td a {\n";
+			print OUTFILE "		text-decoration: none;\n";
+			print OUTFILE "}\n";
+			print OUTFILE ".disclosure_triangle_td a:link {\n";
+			print OUTFILE "		text-decoration: none;\n";
+			print OUTFILE "}\n";
+			print OUTFILE ".disclosure_triangle_td a:active {\n";
+			print OUTFILE "		text-decoration: none;\n";
+			print OUTFILE "}\n";
+			print OUTFILE ".disclosure_triangle_td a:visited:hover {\n";
 			print OUTFILE "		text-decoration: none;\n";
 			print OUTFILE "}\n";
 			print OUTFILE ".disclosure_triangle_td a:hover {\n";
@@ -5854,6 +5942,12 @@ sub _createHTMLOutputFile {
 			print OUTFILE "		color: #808080;\n";
 			print OUTFILE "}\n";
 			print OUTFILE "\n";
+			print OUTFILE "#hd_outermost_table { margin-left: 0px; border-spacing: 0px; margin-top: 0px; padding-left: 0px; padding-top: 0px; border: none; }\n";
+			print OUTFILE "#hd_outermost_table > tr { border-spacing: 0px; margin-left: 0px; margin-top: 0px; padding-left: 0px; padding-top: 0px; border: none; }\n";
+			print OUTFILE "#hd_outermost_table > tr > td { border-spacing: 0px; margin-left: 0px; margin-top: 0px; }\n";
+			print OUTFILE "#hd_outermost_table > tbody > tr { border-spacing: 0px; margin-left: 0px; margin-top: 0px; padding-left: 0px; padding-top: 0px; border: none; }\n";
+			print OUTFILE "#hd_outermost_table > tbody > tr > td { border-spacing: 0px; margin-left: 0px; margin-top: 0px; padding-top: 3px; }\n";
+			print OUTFILE "\n";
 		}
 		print OUTFILE "#tocMenu {\n";
 		if ($HeaderDoc::newTOC == 5) {
@@ -5877,15 +5971,53 @@ sub _createHTMLOutputFile {
 			print OUTFILE "		width: auto;\n";
 			# print OUTFILE "         position: absolute; top: 0px;\n";
 			print OUTFILE "		padding-left: 15px;\n";
+			print OUTFILE "}\n";
 		} else {
 			print OUTFILE "#bodyText {\n";
 			print OUTFILE "		top: 0px;\n";
 			print OUTFILE "		margin-left: 230px;\n";
+			print OUTFILE "}\n";
 		}
-		print OUTFILE "}\n";
 		print OUTFILE "--></style>\n";
+
+
+		if ($HeaderDoc::newTOC == 5) {
+			print OUTFILE "<style id=\"disable_before_iOS_5\"><!--\n";
+			print OUTFILE "#tocMenu {\n";
+			print OUTFILE "		position: fixed;\n";
+			print OUTFILE "		height: 100%;\n";
+			print OUTFILE "		overflow: auto;\n";
+			print OUTFILE "}\n";
+			print OUTFILE "#bodyContents {\n";
+			# print OUTFILE "		float: right;\n"; # Old div layout that proved unworkable
+			print OUTFILE "		width: auto;\n";
+			# print OUTFILE "         position: absolute; top: 0px;\n";
+			print OUTFILE "		left: 235px;\n";
+			print OUTFILE "		right: 0;\n";
+			print OUTFILE "		padding-left: 15px;\n";
+			print OUTFILE "		position: fixed;\n";
+			print OUTFILE "		height: 100%;\n";
+			print OUTFILE "		overflow-y: scroll;\n";
+			print OUTFILE "}\n";
+			print OUTFILE "--></style>\n";
+		}
 	    }
 	    if (!$HeaderDoc::suppressDefaultJavaScript) {
+		if ($HeaderDoc::newTOC == 5) {
+			print OUTFILE "<script language=\"JavaScript\" type=\"text/javascript\"><!--\n";
+			print OUTFILE "    if (navigator.platform && (navigator.platform.match(/iPad/) || navigator.platform.match(/iPhone/) || navigator.platform.match(/iPod/))) {\n";
+			print OUTFILE "        if (navigator.userAgent.match(/OS 1(_\\d)+/) ||\n";
+			print OUTFILE "            navigator.userAgent.match(/OS 2(_\\d)+/) ||\n";
+			print OUTFILE "            navigator.userAgent.match(/OS 3(_\\d)+/) ||\n";
+			print OUTFILE "            navigator.userAgent.match(/OS 4(_\\d)+/)) {\n";
+			print OUTFILE "                /* Earlier iOS versions require different scrolling gestures with position: fixed. */\n";
+			print OUTFILE "                var del_style_elt = document.getElementById(\"disable_before_iOS_5\");\n";
+			print OUTFILE "                if (del_style_elt) del_style_elt.parentNode.removeChild(del_style_elt);\n";
+			print OUTFILE "        }\n";
+			print OUTFILE "    }\n";
+			print OUTFILE "// --></script>\n";
+		}
+
 		if ($newTOC && $newTOC != 5) {
 			# if (!$HeaderDoc::use_iframes) { print OUTFILE "<script language=\"JavaScript\" src=\"/Resources/JavaScript/toc.js\" type=\"text/javascript\"></script>\n"; }
 			print OUTFILE "<meta id=\"toc-file\" name=\"toc-file\" content=\"toc.html\" />\n";
@@ -6633,6 +6765,10 @@ sub processComment
 		# @@@ FIXME DAG
 		my $cppAccessControlState = "protected:";
 
+		if ($sublang eq "IDL") {
+			$cppAccessControlState = "public:"; # IDLs have no notion of protection, typically.
+		}
+
 		my $fieldsref = \@fields;
 		my $filename = $self->filename;
 
@@ -7247,7 +7383,7 @@ sub groupDoc()
 				my $desc = $group->discussion();
 				if ($xml) {
 					$string .= "<groupinfo>\n";
-					$string .= "<name>$groupname</name>\n";
+					$string .= "<name>".$self->textToXML($groupname)."</name>\n";
 					if ($abs =~ /\S/) {
 						$string .= "<abstract>".$self->htmlToXML($abs)."</abstract>";
 					}
@@ -7577,6 +7713,56 @@ sub fixupTypeRequests
     }
 
     $self->{PDEFINES} = \@newobjs;
+}
+
+
+# /*!
+#     @abstract
+#         Marks an API reference ID as having been emitted already.
+#     @param self
+#         The API owner object.
+#     @param uid
+#         The user ID to query or set.
+#     @param used
+#         Normally, you would pass 1 when setting.  If you just
+#         want to query the value, do not pass this argument.
+#  */
+sub appleRefUsed
+{
+    my $self = shift;
+    my $uid = shift;
+
+    my %map = ();
+
+    if ($self->{APPLEREFUSED}) {
+	%map = %{$self->{APPLEREFUSED}};
+    }
+
+    my $retval = $map{$uid};
+
+    if (@_) {
+	# print STDERR "SETTING USED FOR $uid ON $self\n";
+	$map{$uid} = 1;
+	$self->{APPLEREFUSED} = \%map;
+    }
+
+    return $retval;
+}
+
+# /*!
+#     @abstract
+#         Clears the API reference hash used by {@link appleRefUsed}.
+#     @discussion
+#         This is called when an API owner object needs to be
+#         emitted again (e.g. when a category's methods are folded
+#         into a class in another header).
+#  */
+sub resetAppleRefUsed
+{
+    my $self = shift;
+
+    # print STDERR "RESETTING USED ON $self\n";
+    delete $self->{APPLEREFUSED};
 }
 
 1;

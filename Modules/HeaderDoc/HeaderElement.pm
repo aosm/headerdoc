@@ -3,7 +3,7 @@
 # Class name: HeaderElement
 # Synopsis: Root class for Function, Typedef, Constant, etc. -- used by HeaderDoc.
 #
-# Last Updated: $Date: 2011/05/18 14:09:25 $
+# Last Updated: $Date: 2014/03/06 11:05:55 $
 #
 # Copyright (c) 1999-2004 Apple Computer, Inc.  All rights reserved.
 #
@@ -157,6 +157,8 @@
 #     @var FIRSTCONSTNAME
 #         The first constant name within an enumeration.  Used as the name of
 #         an anonymous enumeration if no name is specified in the comment.
+#     @var FORCENAME
+#         The contents of an \@name tag, which overrides any name obtained in any other way.
 #     @var FULLPATH
 #         The filename containing this declaration (with leading parts left intact).
 #     @var FUNCORMETHOD
@@ -255,7 +257,7 @@
 #         destroying this object to allow those references to be destroyed.
 #     @var NAMESPACE
 #         Contains a text string representing the namespace for this class.
-#         See {@link namespace}.
+#         See {@link //apple_ref/perl/instm/HeaderDoc::HeaderElement/namespace//() namespace}.
 #     @var NOREGISTERUID
 #         Set to 1 when an object's UID has been unregistered to prevent it from being
 #         registered again.  See {@link noRegisterUID}.
@@ -328,7 +330,8 @@
 #     @var USESTDOUT
 #         Set to 1 if the <code>-P</code> (pipe) flag is passed to HeaderDoc, else 0.
 #     @var VALUE
-#         The value of a constant/variable.  See {@link value}.
+#         The value of a constant/variable.
+#         See {@link //apple_ref/perl/instm/HeaderDoc::HeaderElement/value//() value}.
 #     @var VARIABLES
 #         An array of variables enclosed in a normal (usually function) object.  These are
 #         {@link //apple_ref/perl/cl/HeaderDoc::MinorAPIElement MinorAPIElement} objects.
@@ -337,6 +340,21 @@
 #         {@link //apple_ref/perl/cl/HeaderDoc::Var Var} objects.
 #     @var XMLTHROWS
 #         A copy of the value in <code>THROWS</code> with XML formatting.
+#     @var AS_CLASS_SELF
+#         A <code>CPPClass</code> object cloned from the current function object that holds
+#         any scripts that are nested within the function.  See
+#         {@link cloneAppleScriptFunctionContents} and {@link processAppleScriptFunctionContents}
+#         for more information.
+#     @var AS_FUNC_SELF
+#         The <code>Function</code> object that the current class object was cloned from.  See
+#         {@link cloneAppleScriptFunctionContents} and {@link processAppleScriptFunctionContents}
+#         for more information.
+#     @var ASCONTENTSPROCESSED
+#         Set to 1 after the {@link processAppleScriptFunctionContents} method runs.
+#         for more information.
+#     @var PARSEDPSEUDOCLASSNAME
+#         The name of the directory where the contents from any classes within the {@link AS_CLASS_SELF}
+#         container are written.
 #  */
 package HeaderDoc::HeaderElement;
 
@@ -353,6 +371,16 @@ use Encode qw(encode decode);
 
 use Devel::Peek;
 
+my $isMacOS;
+my $pathSeparator;
+if ($^O =~ /MacOS/io) {
+        $pathSeparator = ":";
+        $isMacOS = 1;
+} else {
+        $pathSeparator = "/";
+        $isMacOS = 0;
+}
+
 # /*!
 #     @abstract
 #         The revision control revision number for this module.
@@ -360,7 +388,7 @@ use Devel::Peek;
 #         In the git repository, contains the number of seconds since
 #         January 1, 1970.
 #  */
-$HeaderDoc::HeaderElement::VERSION = '$Revision: 1305752965 $';
+$HeaderDoc::HeaderElement::VERSION = '$Revision: 1394132755 $';
 
 # /*!
 #     @abstract
@@ -1113,7 +1141,7 @@ sub name {
 
     my($class) = ref($self) || $self;
 
-    print STDERR "$class\n" if ($localDebug);
+    print STDERR "IN NAME: $class\n" if ($localDebug);
 
     if (@_) {
         my $name = shift;
@@ -1128,7 +1156,7 @@ sub name {
 
 	print STDERR "NAMESET: $self -> $name\n" if ($localDebug);
 
-	if (!($class eq "HeaderDoc::Header") && ($oldname && length($oldname))) {
+	if (!($class eq "HeaderDoc::Header") && ($oldname && length($oldname)) && !length($self->{FORCENAME})) {
 		# Don't warn for headers, as they always change if you add
 		# text after @header.  Also, don't warn if the new name
 		# contains the entire old name, to avoid warnings for
@@ -1155,7 +1183,9 @@ sub name {
 		} elsif (($class eq "HeaderDoc::CPPClass" || $class =~ /^HeaderDoc::ObjC/o) && $name =~ /:/o) {
 			warn("$fullpath:$linenum: warning: Class name contains colon, which is probably not what you want.\n");
 		}
-	}
+	} elsif (length($self->{FORCENAME})) {
+        $name = $self->{FORCENAME};
+    }
 
 	$name =~ s/\n$//sgo;
 	$name =~ s/\s$//sgo;
@@ -1596,6 +1626,8 @@ sub getAttributes
         foreach my $key (sort strcasecmp keys %attlist) {
 	    my $value = $attlist{$key};
 	    if ($xml) {
+		$key = $self->htmlToXML($key);
+		$value = $self->htmlToXML($value);
 		$retval .= "<longattribute><name>$key</name><value>$value</value></longattribute>\n";
 	    } else {
 		$maybe = 0;
@@ -2504,7 +2536,7 @@ sub throws {
 #     @param self
 #         The current object.
 #     @discussion
-#         The value is set with {@link throws}.
+#         The value is set with {@link //apple_ref/perl/instm/HeaderDoc::HeaderElement/throws//() throws}.
 #  */
 sub XMLthrows {
     my $self = shift;
@@ -3894,7 +3926,7 @@ sub keywords
 	"try" => 1,
 	"volatile"  => 1,
 	"while"  => 1);
-    my %tclKeywords = ( ); # @@@ FIXME DAG @@@
+    my %tclKeywords = ( "method" => 1, "constructor" => 1, "proc" => 1, "attribute" => 1 ); # Consider adding "regexp" command? # @@@ ADD "class" and fix bugs.
     my %perlKeywords = ( "sub"  => 1, "my" => 8, "next" => 1, "last" => 1,
 	"package" => 1 );
     my %shellKeywords = ( "sub"  => 1, "alias" => 1,
@@ -4235,6 +4267,7 @@ sub declarationInHTML {
 #  */
 sub parseTree {
     my $self = shift;
+    my $localDebug = 0;
 
     if (@_) {
 	my $parsetree = shift;
@@ -4242,6 +4275,18 @@ sub parseTree {
 		$self->addParseTree($parsetree);
 	}
         $self->{PARSETREE} = $parsetree;
+
+	my $class = ref($self) || $self;
+	if ($self->lang eq "applescript" && $class eq "HeaderDoc::Function") {
+		if (!$self->{AS_CLASS_SELF}) {
+			$self->cloneAppleScriptFunctionContents();
+		}
+		if ($localDebug) {
+			print STDERR "ADDING PARSE TREE FOR $self\n";
+			bless($parsetree, "HeaderDoc::ParseTree");
+			${$parsetree}->dbprint();
+		}
+	}
     }
     return $self->{PARSETREE};
 }
@@ -4978,6 +5023,7 @@ sub styleSheet
 
     if ($stdstyles) {
 	# Most stuff is 10 pt.
+	$css .= "body {border: 0px; margin: 0px;}";
 	$css .= "div {font-size: 10pt; text-decoration: none; font-family: lucida grande, geneva, helvetica, arial, sans-serif; color: #000000;}";
 	$css .= "td {font-size: 10pt; text-decoration: none; font-family: lucida grande, geneva, helvetica, arial, sans-serif; color: #000000;}";
 
@@ -5146,6 +5192,20 @@ sub documentationBlock
     # print STDERR "$self (".$self->name().") ISINTERNAL: ".$self->isInternal()." DOIT: ".$HeaderDoc::document_internal."\n";
 
     if ($self->isInternal() && !$HeaderDoc::document_internal) { return ""; }
+
+    my @embeddedClasses = ();
+    my $class_self = undef;
+    if ($self->lang eq "applescript" && $class eq "HeaderDoc::Function") {
+	if (!$self->{ASCONTENTSPROCESSED}) {
+		$class_self = $self->processAppleScriptFunctionContents();
+		if ($class_self) {
+			my @classes = $class_self->classes();
+			foreach my $obj (@classes) {
+				push(@embeddedClasses, $obj);
+			}
+		}
+	}
+    }
 
     # print STDERR "GOTHERE\n";
 
@@ -5341,6 +5401,10 @@ sub documentationBlock
     if ($self->can("accessControl")) {
 	$accessControl = $self->accessControl();
     }
+    my $optionalOrRequired = "";
+    if ($self->parserState && ($apioclass =~ /HeaderDoc::ObjCProtocol/)) {
+	$optionalOrRequired = $self->parserState->{optionalOrRequired};
+    }
     my $includeAccess = 0;
     if ($accessControl ne "") { $includeAccess = 1; }
     if ($self->can("isProperty") && $self->isProperty()) { $includeAccess = 0; }
@@ -5354,6 +5418,8 @@ sub documentationBlock
 	my $declend = $self->headerDocMark("declaration", "end");
 	if ($includeAccess) {
 		$contentString .= "<pre><tt>$accessControl</tt>\n<br>$declaration</pre>\n";
+	} elsif (length $optionalOrRequired) {
+		$contentString .= "<pre><tt>$optionalOrRequired</tt>\n<br>$declaration</pre>\n";
 	} else {
 		$contentString .= "<pre>$declstart$declaration$declend</pre>\n";
 	}
@@ -5504,6 +5570,48 @@ sub documentationBlock
 	    $contentString .= "</div>\n";
         }
     }
+    if (@embeddedClasses) {
+	$showDiscussionHeading = 1;
+	$contentString .= "<h5 class=\"tight\"><font face=\"Lucida Grande,Helvetica,Arial\">Embedded Classes</font></h5>\n";
+        $contentString .= "<div class='param_indent'>\n";
+        $contentString .= "<dl>\n";
+        # $contentString .= "<table border=\"1\"  width=\"90%\">\n";
+        # $contentString .= "<thead><tr><th>Name</th><th>Description</th></tr></thead>\n";
+        foreach my $element (@embeddedClasses) {
+            my $cName = $element->name();
+
+		# print STDERR "EMBEDDED CLASS: $cName\n";
+
+            my $cDesc = $element->discussion();
+            # my $uid = "//$apiUIDPrefix/c/econst/$cName";
+            # registerUID($uid);
+            my $uid = $element->apiuid(); # "econst");
+
+	    my $safeName = $cName;
+	    $safeName = &safeName(filename => $cName);
+
+	    my $url = $class_self->{PARSEDPSEUDOCLASSNAME}.$pathSeparator."Classes".$pathSeparator.$safeName.$pathSeparator."index.html";
+
+	    my $target = "doc";
+	    my $classAsComposite = $HeaderDoc::ClassAsComposite;
+	    # if ($class eq "HeaderDoc::Header") { $classAsComposite = 0; }
+
+	    if ($composite && !$classAsComposite) { $classAsComposite = 1; $target = "_top"; }
+	    if ($element->isAPIOwner()) {
+		$target = "_top";
+		$classAsComposite = 0;
+	    }
+
+	    if ($HeaderDoc::use_iframes) {
+		$target = "_top";
+	    }
+
+            # $contentString .= "<tr><td align=\"center\"><a href=\"$url\" target=\"$target\"><code>$cName</code></a></td><td>$cDesc</td></tr>\n";
+            $contentString .= "<dt><a href=\"$url\" target=\"$target\"><code>$cName</code></a></dt><dd>$cDesc</dd>\n";
+        }
+        # $contentString .= "</table>\n</div>\n";
+        $contentString .= "</dl>\n</div>\n";
+    }
     if (@constants) {
 	$showDiscussionHeading = 1;
         $contentString .= "<h5 class=\"tight\"><font face=\"Lucida Grande,Helvetica,Arial\">Constants</font></h5>\n";       
@@ -5519,9 +5627,9 @@ sub documentationBlock
             my $uid = $element->apiuid(); # "econst");
             # $contentString .= "<tr><td align=\"center\"><a name=\"$uid\"><code>$cName</code></a></td><td>$cDesc</td></tr>\n";
 
-	    if (!$HeaderDoc::appleRefUsed{$uid} && !$HeaderDoc::ignore_apiuid_errors) {
+	    if (!$apio->appleRefUsed($uid) && !$HeaderDoc::ignore_apiuid_errors) {
 		# print STDERR "MARKING APIREF $uid used\n";
-		$HeaderDoc::appleRefUsed{$uid} = 1;
+		$apio->appleRefUsed($uid, 1);
                 $contentString .= "<dt><a name=\"$uid\"><code>$cName</code></a></dt><dd>$cDesc</dd>\n";
 	    } else {
                 $contentString .= "<dt><code>$cName</code></dt><dd>$cDesc</dd>\n";
@@ -5671,11 +5779,12 @@ sub documentationBlock
 
 			# $contentString .= "<tr><td align=\"center\"><a name=\"$uid\"><code>$cName</code></a></td><td>$cDesc</td></tr>\n";
 
-			if (!$HeaderDoc::appleRefUsed{$uid} && !$HeaderDoc::ignore_apiuid_errors) {
-				# print STDERR "MARKING APIREF $uid used\n";
-				$HeaderDoc::appleRefUsed{$uid} = 1;
+			if (!$apio->appleRefUsed($uid) && !$HeaderDoc::ignore_apiuid_errors) {
+				# cluck("MARKING APIREF $uid used\n");
+				$apio->appleRefUsed($uid, 1);
 				$contentString .= "<dt><a name=\"$uid\"><code>$cName</code></a></dt><dd>$cDesc</dd>\n";
 			} else {
+				# cluck("Reused Apple Ref $uid\n");
 				$contentString .= "<dt><code>$cName</code></dt><dd>$cDesc</dd>\n";
 			}
 		    }
@@ -6288,6 +6397,37 @@ sub XMLdocumentationBlock {
     my $fielduidtag = "";
     my $extra = "";
 
+    my $accessControl = "";
+    if ($self->can("accessControl")) {
+        $accessControl = $self->accessControl();
+    }
+    if ($accessControl =~ /\S/) {
+	$accessControl = " accessControl=\"$accessControl\"";
+    } else {
+	$accessControl = "";
+    }
+
+    my $optionalOrRequired = "";
+    if ($self->parserState && ($apioclass =~ /HeaderDoc::ObjCProtocol/)) {
+	$optionalOrRequired = $self->parserState->{optionalOrRequired};
+	if (length $optionalOrRequired) {
+		$optionalOrRequired = " optionalOrRequired=\"$optionalOrRequired\"";
+	}
+    }
+
+    my @embeddedClasses = ();
+    my $class_self = undef;
+    if ($self->lang eq "applescript" && $class eq "HeaderDoc::Function") {
+	if (!$self->{ASCONTENTSPROCESSED}) {
+		$class_self = $self->processAppleScriptFunctionContents();
+		# $class_self->dbprint();
+		my @classes = $class_self->classes();
+		foreach my $obj (@classes) {
+			push(@embeddedClasses, $obj);
+		}
+	}
+    }
+
     $langstring = $self->apiRefLanguage($sublang);
 
     # if ($sublang eq "cpp") {
@@ -6424,6 +6564,7 @@ sub XMLdocumentationBlock {
 		# my $methodType = $self->getMethodType($declarationRaw);
 		my $methodType = $self->getMethodType();
 		$uid = $self->apiuid($methodType);
+		$extra = " type=\"$methodType\"";
 		$isAPIOwner = 0;
 		last SWITCH;
 	    };
@@ -6494,7 +6635,11 @@ sub XMLdocumentationBlock {
 		} else {
 			$definetype = "value";
 		}
-		$defineinfo = " definetype=\"$definetype\" ";
+		$defineinfo = "definetype=\"$definetype\" ";
+
+		if ($self->parseOnly()) {
+			$defineinfo .= "parseOnly=\"true\" ";
+		}
 		$isAPIOwner = 0;
 		last SWITCH;
 	    };
@@ -6563,12 +6708,16 @@ sub XMLdocumentationBlock {
 	};
     }
 
+    my $indexgroup = $self->indexgroup();
+
     my $throws = $self->XMLthrows();
-    $compositePageString .= "<$type id=\"$uid\" $defineinfo"."lang=\"$langstring\"$extra>"; # e.g. "<class type=\"C++\">";
+    $compositePageString .= "<$type id=\"$uid\" $defineinfo"."lang=\"$langstring\"$extra$accessControl$optionalOrRequired>"; # e.g. "<class type=\"C++\">";
 
     if (length($name)) {
 	$compositePageString .= "<name>$name</name>\n";
     }
+
+    if ($indexgroup =~ /\S/) { $compositePageString .= "<indexgroup>".textToXML($indexgroup)."</indexgroup>"; }
 
     if (length($abstract)) {
 	$compositePageString .= "<abstract>$abstract</abstract>\n";
@@ -6587,6 +6736,9 @@ sub XMLdocumentationBlock {
 	$value = $self->value();
 
 	if (length($value) && ($value ne "UNKNOWN")) {
+		# Always XML in this function, so do this every time.
+		$value = $self->textToXML($value);
+
         	$compositePageString .= "<value>$value</value>\n";
 	}
     }
@@ -6720,9 +6872,9 @@ sub XMLdocumentationBlock {
 			if (length($fielduidtag)) {
 				my $fielduid = $field->apiuid($fielduidtag);
 				$fielduidstring = " id=\"$fielduid\"";
-				if (!$HeaderDoc::appleRefUsed{$uid} && !$HeaderDoc::ignore_apiuid_errors) {
+				if (!$apio->appleRefUsed($uid) && !$HeaderDoc::ignore_apiuid_errors) {
 					# print STDERR "MARKING APIREF $uid used\n";
-					$HeaderDoc::appleRefUsed{$uid} = 1;
+					$apio->appleRefUsed($uid, 1);
 				} else {
 					# already used or a "junk" run to obtain
 					# uids for another purpose.  Drop the
@@ -6748,7 +6900,14 @@ sub XMLdocumentationBlock {
 		}
                 $compositePageString .= "</constantlist>\n";
 	}
-
+	if (@embeddedClasses) {
+		$contentString = $class_self->_getEmbeddedClassXMLDetailString(\@embeddedClasses);
+		if (length($contentString)) {
+			$compositePageString .= "<embeddedclasslist>\n";
+			$compositePageString .= $contentString;
+			$compositePageString .= "</embeddedclasslist>\n";
+		}
+	}
 	if (@local_variables) {
 		$compositePageString .= "<localvariablelist>\n";
                 foreach my $field (@local_variables) {
@@ -6768,9 +6927,9 @@ sub XMLdocumentationBlock {
 			if (length($fielduidtag)) {
 				my $fielduid = $field->apiuid($fielduidtag);
 				$fielduidstring = " id=\"$fielduid\"";
-				if (!$HeaderDoc::appleRefUsed{$uid} && !$HeaderDoc::ignore_apiuid_errors) {
+				if (!$apio->appleRefUsed($uid) && !$HeaderDoc::ignore_apiuid_errors) {
 					# print STDERR "MARKING APIREF $uid used\n";
-					$HeaderDoc::appleRefUsed{$uid} = 1;
+					$apio->appleRefUsed($uid, 1);
 				} else {
 					# already used or a "junk" run to obtain
 					# uids for another purpose.  Drop the
@@ -7610,7 +7769,7 @@ sub processComment
 		$top_level_field = validTag($fieldname, 1);
 
 		if ($top_level_field && $seen_top_level_field && ($fieldname !~ /const(ant)?/) &&
-		    ($fieldname !~ /var/) && (!$self->isBlock() || $fieldname ne "define")) {
+		    ($fieldname !~ /var/) && (!$self->isBlock() || $fieldname ne "define") && $fieldname ne "name") {
 			# We've seen more than one top level field.
 
 			$field =~ s/^(\w+)(\s)//s;
@@ -7646,6 +7805,21 @@ sub processComment
 			$top_level_field = 0;
 		} elsif ($top_level_field && $seen_top_level_field && ($fieldname eq "var")) {
 			$top_level_field = 0;
+		}
+
+		# Fix for another common mistake: people using @field for a class
+		# member variable instead of @var or @const.
+		if ($class =~ /HeaderDoc\:\:Var/ && !$isProperty) {
+			if (!$seen_top_level_field && $fieldname eq "field") {
+				if ($sublang !~ /^occ/o) {
+					warn "Field \@$fieldname found in \@var declaration.\nYou probably meant \@var instead.\n" if (!$HeaderDoc::running_test);
+					$field =~ s/^(\w+)(\s)//s;
+					my $spc = $2;
+
+					$field = "var$spc$field";
+					$top_level_field = 1;
+				}
+			}
 		}
 	}
 	# warn("FN: \"$fieldname\"\n");
@@ -7828,7 +8002,7 @@ field);
 		};
 
 	    ($class =~ /HeaderDoc\:\:PDefine/ && $self->isBlock() && $field =~ s/^hidesingletons(\s+)/$1/sio) && do {$self->{HIDESINGLETONS} = 1; last SWITCH;};
-	    ($class =~ /HeaderDoc\:\:PDefine/ && $field =~ s/^hidecontents(\s+)/$1/sio) && do {$self->hideContents(1); last SWITCH;};
+	    (($class =~ /HeaderDoc\:\:PDefine/ || $class =~ /HeaderDoc\:\:Function/ || $class =~ /HeaderDoc\:\:Method/) && $field =~ s/^hidecontents(\s+)/$1/sio) && do {$self->hideContents(1); last SWITCH;};
 	    (($class =~ /HeaderDoc\:\:Function/ || $class =~ /HeaderDoc\:\:Method/) && $field =~ s/^(function|method)group\s+//sio) &&
 		do {$self->group($field); last SWITCH;};
 
@@ -8075,6 +8249,7 @@ field);
 				print STDERR "TLF: $field\n" if ($localDebug);
 
 				my $pattern = "";
+
 				if ($class =~ /HeaderDoc\:\:PDefine/ && $field =~ s/^(availabilitymacro)(\s+|$)/$2/sio) {
 					$self->isAvailabilityMacro(1);
 					$keepname = 1;
@@ -8114,6 +8289,7 @@ field);
 
 				my ($name, $abstract_or_disc, $namedisc) = getAPINameAndDisc($field, $self->lang(), $pattern);
 				print STDERR "FIELD: $field\nNAME: $name AOD: $abstract_or_disc ND: $namedisc" if ($localDebug);
+				if ($fieldname eq "name") {$self->{FORCENAME} = $name; print STDERR "FORCED NAME TO \"$name\"\n"};
 
 				print STDERR "KEEPNAME: $keepname\n" if ($localDebug);
 
@@ -8396,6 +8572,25 @@ sub declaredIn
     if ($apio->outputformat() eq "hdxml") {
 	# blank for XML.
 	return "";
+    }
+
+    # print STDERR "DI: $self APIO: $apio\n";
+
+    if ($apio->{AS_FUNC_SELF}) {
+	my $func_apio_ref = $apio->{AS_FUNC_SELF};
+	if (!$func_apio_ref) {
+		die("Bad AS_FUNC_SELF for $apio (".$apio->name().")\n");
+	}
+	my $func_apio = ${$func_apio_ref};
+	bless($func_apio, "HeaderDoc::HeaderElement");
+	bless($func_apio, $func_apio->class());
+
+	# print STDERR "CLASS IN FUNC\n";
+	my $name = $func_apio->name();
+	my $apiref = $func_apio->apiuid();
+	my $jumpTarget = $apiref;
+
+	return "<a href=\"../../../index.html#$jumpTarget\" logicalPath=\"$apiref\" target=\"_top\" machineGenerated=\"true\">$name</a>";
     }
 
     if ($self->isAPIOwner()) {
@@ -9300,5 +9495,152 @@ sub prepareDiscussionForTemporary
     $self->{ABSTRACT} = undef;
     $self->{DISCUSSION_SET} = undef;
 }
+
+# /*!
+#     @abstract
+#         Clones a function object for use as an API owner for any
+#         enclosing scripts.
+#  */
+sub cloneAppleScriptFunctionContents
+{
+    my $self = shift;
+
+    my $localDebug = 0;
+
+    if ($localDebug) {
+	print STDERR "Cloning $self for AppleScript function body parsing.\n";
+	$self->dbprint();
+    }
+
+    my $class_self = HeaderDoc::CPPClass->new();
+    $self->{AS_CLASS_SELF} = \$class_self;
+    $class_self->{AS_FUNC_SELF} = \$self;
+
+    my $orig_ptref = $self->{PARSETREE};
+    bless($orig_ptref, "HeaderDoc::ParseTree");
+    my $parseTree = ${$orig_ptref};
+
+    $parseTree = $parseTree->ASFunctionBodyStart();
+
+    my $tree = $parseTree->clone();
+    $tree->parserState($self->{PARSERSTATE});
+
+    # Don't copy the name here, because it hasn't been set yet, but copy
+    # the parse tree, because otherwise it gets stomped.
+    $class_self->{PARSETREE} = \$tree;
+    $class_self->{PARSERSTATE} = $self->{PARSERSTATE};
+    $class_self->{SUBLANG} = $self->{SUBLANG};
+    $class_self->{APIOWNER} = $self->{APIOWNER};
+    $class_self->{FILENAME} = $self->{FILENAME};
+    $class_self->{FULLPATH} = $self->{FULLPATH};
+    $class_self->{OUTPUTFORMAT} = $self->{OUTPUTFORMAT};
+
+    print STDERR "NAME: ".$class_self->name()."\n" if ($localDebug);
+    print STDERR "RAWNAME: ".$class_self->rawname()."\n" if ($localDebug);
+    print STDERR "TREE: $tree\n" if ($localDebug);
+
+    $tree->apiOwner($class_self);
+}
+
+# /*!
+#     @abstract
+#         Processes the cloned function/class object previously
+#         created by the {@link cloneAppleScriptFunctionContents}
+#         method.
+#  */
+sub processAppleScriptFunctionContents
+{
+    my $self = shift;
+    my $localDebug = 0;
+
+    print STDERR "IN processAppleScriptFunctionContents\n" if ($localDebug);
+    $self->dbprint() if ($localDebug);
+
+    # Grab the class object that contains the parsed contents of the function body.
+    my $class_self_ref = $self->{AS_CLASS_SELF};
+    if (!$class_self_ref) {
+	die("Missing AS_CLASS_SELF for $self (".$self->name().")\n");
+    }
+    my $class_self = ${$class_self_ref};
+    bless($class_self, "HeaderDoc::HeaderElement");
+    bless($class_self, $class_self->class());
+
+    # Copy the name and other info, now that it is known.
+    $class_self->{NAME} = $self->{NAME};
+    $class_self->{RAWNAME} = $self->{RAWNAME};
+    $class_self->{FORCENAME} = $self->{FORCENAME};
+    $class_self->{NAMEREFS} = $self->{NAMEREFS};
+    $class_self->{LANG} = $self->{LANG};
+    $class_self->{OUTPUTFORMAT} = $self->{OUTPUTFORMAT};
+
+    # Determine the output mode.
+    my $xml_output = 0;
+    my $apiOwner = $self->apiOwner();
+    if ($apiOwner->outputformat() eq "hdxml") { $xml_output = 1; }
+
+    my $apioclass = ref($apiOwner) || $apiOwner;
+
+    if ($apioclass =~ /HeaderDoc::Header/) {
+	$class_self->{HEADEROBJECT} = $apiOwner;
+    } else {
+	$class_self->{HEADEROBJECT} = $apiOwner->{HEADEROBJECT};
+    }
+
+
+    print STDERR "OF: ".$apiOwner->outputformat()."\n" if ($localDebug);
+
+    # Obtain the parse tree.
+    my $ptref = $class_self->{PARSETREE};
+    bless($ptref, "HeaderDoc::ParseTree");
+    my $parseTree = ${$ptref};
+
+    # Process the embedded tags and write out the contents.
+    $parseTree->processEmbeddedTags($xml_output, $class_self);
+
+    # print STDERR "PROCESSED ".$class_self->name()."\n";
+    my @has_classes = $class_self->classes();
+    # print STDERR "WRITING ".scalar(@has_classes)." CLASSES\n";
+    if (!scalar(@has_classes)) {
+	return undef;
+    }
+
+    # Compute the name of the directory where the contents should be written (in HTML mode)
+    if (!$xml_output) {
+	my $className = $class_self->name();
+	# for now, always shorten long names since some files may be moved to a Mac for browsing
+	if (1 || $isMacOS) {$className = &safeName(filename => $className);};
+	$className = "parsedFunctionContents_$className";
+
+	# my $classesDir = $self->apiOwner()->classesDir();
+
+	# if (!$HeaderDoc::running_test) {
+		# if (! -e $classesDir) {
+			# unless (mkdir ("$classesDir", 0777)) {die ("Can't create output folder $classesDir. \n$!");};
+		# }
+	# }
+
+	my $classRootDir = $self->apiOwner()->{OUTPUTDIR};
+	$class_self->outputDir("$classRootDir$pathSeparator$className");
+	$class_self->{PARSEDPSEUDOCLASSNAME} = $className;
+    }
+
+    # Write the output (in HTML mode)
+    if (!$xml_output) {
+	if ($class_self->classes()) {
+		print STDERR "CLASSES\n" if ($localDebug);
+		if (!$HeaderDoc::running_test) {
+			$class_self->writeHeaderElements();
+		}
+	} else {
+		print STDERR "NO CLASSES\n" if ($localDebug);
+	}
+    }
+    $self->{ASCONTENTSPROCESSED} = 1;
+
+    $parseTree->dbprint() if ($localDebug);
+
+    return $class_self;
+}
+
 
 1;

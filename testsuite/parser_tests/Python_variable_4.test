@@ -3,7 +3,7 @@ FrT;@1|>>0|$15|HeaderDoc::Test%22|$4|CODE$7|COMMENT$7|CPPCODE$15|EXPECTED_RESULT
     """
 python_var_junk = 4
 $29|        python_var_4 comment
-$0|$6169|-=: TOP LEVEL COMMENT PARSE VALUES :=-
+$0|$6341|-=: TOP LEVEL COMMENT PARSE VALUES :=-
 inHeader: 0
 inClass: 0
 inInterface: 0
@@ -32,6 +32,7 @@ blockOffset: 0
 fullpath: /test_suite_bogus_path/Python_variable_4.test
 -=: BLOCKPARSE PARSER STATE KEYS :=-
 $parserState->{FULLPATH} => /test_suite_bogus_path/Python_variable_4.test
+$parserState->{afterNL} => 2
 $parserState->{autoContinue} => 0
 $parserState->{availability} => 
 $parserState->{backslashcount} => 0
@@ -45,7 +46,7 @@ $parserState->{categoryClass} =>
 $parserState->{classtype} => 
 $parserState->{endOfTripleQuote} => 0
 $parserState->{endOfTripleQuoteToken} => HeaderDoc::ParseTree=HASH(OBJID)
-$parserState->{endgame} => 1
+$parserState->{endgame} => 3
 $parserState->{freezeStack} => ARRAY(OBJID)
 $parserState->{freezereturn} => 0
 $parserState->{frozensodname} => 
@@ -68,7 +69,8 @@ $parserState->{justLeftStringToken} => 0
 $parserState->{kr_c_function} => 0
 $parserState->{kr_c_name} => 
 $parserState->{lang} => python
-$parserState->{lastpart} => "
+$parserState->{lastNLWasQuoted} => 0
+$parserState->{lastpart} => 
 $parserState->{leadspace} => 0
 $parserState->{macroNoTrunc} => 1
 $parserState->{name} => 
@@ -79,8 +81,10 @@ $parserState->{noInsert} => 0
 $parserState->{occmethod} => 0
 $parserState->{occmethodname} => 
 $parserState->{onlyComments} => 0
+$parserState->{parsedParamAtBrace} => ARRAY(OBJID)
 $parserState->{parsedParamList} => ARRAY(OBJID)
 $parserState->{parsedParamParse} => 0
+$parserState->{parsedParamStateAtBrace} => ARRAY(OBJID)
 $parserState->{popAfter} => 0
 $parserState->{posstypes} => 
 $parserState->{posstypesPending} => 1
@@ -92,7 +96,7 @@ $parserState->{seenBraces} => 0
 $parserState->{seenLeading} => 0
 $parserState->{seenMacroPart} => 0
 $parserState->{seenTilde} => 0
-$parserState->{seenToken} => 0
+$parserState->{seenToken} => 1
 $parserState->{setHollowAfter} => 0
 $parserState->{setleading} => 0
 $parserState->{simpleTDcontents} => 
@@ -110,7 +114,7 @@ $parserState->{value} =>  """
 
 $parserState->{valuepending} => 2
 -=: BLOCKPARSE RETURN VALUES :=-
-newcount: 2
+newcount: 3
 typelist: variable
 namelist: python_var_4
 posstypes: constant

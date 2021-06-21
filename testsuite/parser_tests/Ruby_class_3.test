@@ -18,7 +18,7 @@ def myfunc(name)
 end
 
 $41|	Another class that throws an exception.
-$0|$14337|-=: TOP LEVEL COMMENT PARSE VALUES :=-
+$0|$14514|-=: TOP LEVEL COMMENT PARSE VALUES :=-
 inHeader: 0
 inClass: 0
 inInterface: 0
@@ -49,6 +49,7 @@ fullpath: /test_suite_bogus_path/Ruby_class_3.test
 $parserState->{FULLPATH} => /test_suite_bogus_path/Ruby_class_3.test
 $parserState->{ISFORWARDDECLARATION} => 0
 $parserState->{NEXTTOKENNOCPP} => 0
+$parserState->{afterNL} => 2
 $parserState->{availability} => 
 $parserState->{backslashcount} => 0
 $parserState->{basetype} => 
@@ -93,8 +94,10 @@ $parserState->{occmethod} => 0
 $parserState->{occmethodname} => 
 $parserState->{occparmlabelfound} => 4
 $parserState->{onlyComments} => 0
+$parserState->{parsedParamAtBrace} => ARRAY(OBJID)
 $parserState->{parsedParamList} => ARRAY(OBJID)
 $parserState->{parsedParamParse} => 1
+$parserState->{parsedParamStateAtBrace} => ARRAY(OBJID)
 $parserState->{posstypes} => 
 $parserState->{posstypesPending} => 0
 $parserState->{pplStack} => ARRAY(OBJID)
@@ -226,7 +229,7 @@ LONG ATTRIBUTES:
     IS BLOCK: 
     OBJECT TYPE: HeaderDoc::CPPClass
     NAME: RubyClassWithException
-    APIUID: 
+    APIUID: //test_ref/ruby/cl/RubyClassWithException
     ABSTRACT: ""
     DISCUSSION: "<p>Another class that throws an exception.
 "

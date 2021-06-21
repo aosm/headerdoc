@@ -46,7 +46,7 @@ $239|/*! @class This_Does_Not_Contain_Templates
         as template parameters.
     @updated 2003-04-01
 */
-$0|$43930|-=: TOP LEVEL COMMENT PARSE VALUES :=-
+$0|$44194|-=: TOP LEVEL COMMENT PARSE VALUES :=-
 inHeader: 0
 inClass: 1
 inInterface: 0
@@ -74,9 +74,12 @@ inputCounter: 0
 blockOffset: 0
 fullpath: /test_suite_bogus_path/template_1.test
 -=: BLOCKPARSE PARSER STATE KEYS :=-
+$parserState->{ASLBRACEPRECURSOR} => 
+$parserState->{ASLBRACEPRECURSORTAG} => 
 $parserState->{FULLPATH} => /test_suite_bogus_path/template_1.test
 $parserState->{ISFORWARDDECLARATION} => 0
 $parserState->{NEXTTOKENNOCPP} => 0
+$parserState->{afterNL} => 2
 $parserState->{availability} => 
 $parserState->{backslashcount} => 0
 $parserState->{basetype} => 
@@ -119,8 +122,10 @@ $parserState->{occmethod} => 0
 $parserState->{occmethodname} => 
 $parserState->{occparmlabelfound} => 2
 $parserState->{onlyComments} => 0
+$parserState->{parsedParamAtBrace} => ARRAY(OBJID)
 $parserState->{parsedParamList} => ARRAY(OBJID)
 $parserState->{parsedParamParse} => 1
+$parserState->{parsedParamStateAtBrace} => ARRAY(OBJID)
 $parserState->{posstypes} => 
 $parserState->{posstypesPending} => 0
 $parserState->{pplStack} => ARRAY(OBJID)
@@ -391,7 +396,7 @@ LONG ATTRIBUTES:
     IS BLOCK: 
     OBJECT TYPE: HeaderDoc::CPPClass
     NAME: This_Does_Not_Contain_Templates
-    APIUID: 
+    APIUID: //test_ref/cpp/cl/This_Does_Not_Contain_Templates
     ABSTRACT: ""
     DISCUSSION: "<p>This is a test class.  This tests to make sure that
 less than and greater than signs in code are not interpreted
@@ -1681,7 +1686,7 @@ END OF OBJECT
 
 
 
-$43930|-=: TOP LEVEL COMMENT PARSE VALUES :=-
+$44194|-=: TOP LEVEL COMMENT PARSE VALUES :=-
 inHeader: 0
 inClass: 1
 inInterface: 0
@@ -1709,9 +1714,12 @@ inputCounter: 0
 blockOffset: 0
 fullpath: /test_suite_bogus_path/template_1.test
 -=: BLOCKPARSE PARSER STATE KEYS :=-
+$parserState->{ASLBRACEPRECURSOR} => 
+$parserState->{ASLBRACEPRECURSORTAG} => 
 $parserState->{FULLPATH} => /test_suite_bogus_path/template_1.test
 $parserState->{ISFORWARDDECLARATION} => 0
 $parserState->{NEXTTOKENNOCPP} => 0
+$parserState->{afterNL} => 2
 $parserState->{availability} => 
 $parserState->{backslashcount} => 0
 $parserState->{basetype} => 
@@ -1754,8 +1762,10 @@ $parserState->{occmethod} => 0
 $parserState->{occmethodname} => 
 $parserState->{occparmlabelfound} => 2
 $parserState->{onlyComments} => 0
+$parserState->{parsedParamAtBrace} => ARRAY(OBJID)
 $parserState->{parsedParamList} => ARRAY(OBJID)
 $parserState->{parsedParamParse} => 1
+$parserState->{parsedParamStateAtBrace} => ARRAY(OBJID)
 $parserState->{posstypes} => 
 $parserState->{posstypesPending} => 0
 $parserState->{pplStack} => ARRAY(OBJID)
@@ -2026,7 +2036,7 @@ LONG ATTRIBUTES:
     IS BLOCK: 
     OBJECT TYPE: HeaderDoc::CPPClass
     NAME: This_Does_Not_Contain_Templates
-    APIUID: 
+    APIUID: //test_ref/cpp/cl/This_Does_Not_Contain_Templates
     ABSTRACT: ""
     DISCUSSION: "<p>This is a test class.  This tests to make sure that
 less than and greater than signs in code are not interpreted

@@ -10,7 +10,7 @@ FrT;@1|>>0|$15|HeaderDoc::Test%22|$4|CODE$7|COMMENT$7|CPPCODE$15|EXPECTED_RESULT
 $79|            (*! MyObject class
                doesn't do much.
              *)
-$0|$15358|-=: TOP LEVEL COMMENT PARSE VALUES :=-
+$0|$14720|-=: TOP LEVEL COMMENT PARSE VALUES :=-
 inHeader: 0
 inClass: 0
 inInterface: 0
@@ -38,9 +38,11 @@ inputCounter: 0
 blockOffset: 0
 fullpath: /test_suite_bogus_path/AppleScript_class_1.test
 -=: BLOCKPARSE PARSER STATE KEYS :=-
+$parserState->{ASLBRACEPRECURSOR} => 
+$parserState->{ASLBRACEPRECURSORTAG} => 
 $parserState->{FULLPATH} => /test_suite_bogus_path/AppleScript_class_1.test
-$parserState->{ISFORWARDDECLARATION} => 0
 $parserState->{NEXTTOKENNOCPP} => 0
+$parserState->{afterNL} => 2
 $parserState->{availability} => 
 $parserState->{backslashcount} => 0
 $parserState->{basetype} => 
@@ -59,21 +61,22 @@ $parserState->{functionReturnsCallback} => 0
 $parserState->{hollow} => HeaderDoc::ParseTree=HASH(OBJID)
 $parserState->{inBrackets} => 0
 $parserState->{inChar} => 0
-$parserState->{inClass} => 0
+$parserState->{inClass} => 1
 $parserState->{inComment} => 0
 $parserState->{inInlineComment} => 0
 $parserState->{inMacro} => 0
 $parserState->{inMacroLine} => 0
 $parserState->{inOperator} => 0
 $parserState->{inPrivateParamTypes} => 0
-$parserState->{inRubyClass} => 2
+$parserState->{inRubyClass} => 1
 $parserState->{inString} => 0
 $parserState->{inTemplate} => 0
 $parserState->{initbsCount} => 0
-$parserState->{inputCounter} => 10
+$parserState->{inputCounter} => 9
 $parserState->{kr_c_function} => 0
 $parserState->{kr_c_name} => 
 $parserState->{lang} => applescript
+$parserState->{lastDisplayNode} => HeaderDoc::ParseTree=HASH(OBJID)
 $parserState->{lastTreeNode} => HeaderDoc::ParseTree=HASH(OBJID)
 $parserState->{lastsymbol} => 
 $parserState->{macroNoTrunc} => 1
@@ -82,10 +85,12 @@ $parserState->{namePending} => 0
 $parserState->{noInsert} => 0
 $parserState->{occmethod} => 0
 $parserState->{occmethodname} => 
-$parserState->{occparmlabelfound} => 4
+$parserState->{occparmlabelfound} => 3
 $parserState->{onlyComments} => 0
+$parserState->{parsedParamAtBrace} => ARRAY(OBJID)
 $parserState->{parsedParamList} => ARRAY(OBJID)
 $parserState->{parsedParamParse} => 0
+$parserState->{parsedParamStateAtBrace} => ARRAY(OBJID)
 $parserState->{posstypes} => 
 $parserState->{posstypesPending} => 0
 $parserState->{pplStack} => ARRAY(OBJID)
@@ -98,7 +103,7 @@ $parserState->{seenMacroPart} => 0
 $parserState->{seenTilde} => 0
 $parserState->{simpleTDcontents} => 
 $parserState->{simpleTypedef} => 0
-$parserState->{sodclass} => class
+$parserState->{sodclass} => script
 $parserState->{sodname} => MyObject
 $parserState->{sodtype} => 
 $parserState->{sodtypeclasstoken} => script
@@ -110,10 +115,10 @@ $parserState->{sublang} => applescript
 $parserState->{value} => 
 $parserState->{valuepending} => 0
 -=: BLOCKPARSE RETURN VALUES :=-
-newcount: 10
-typelist: class
+newcount: 9
+typelist: script
 namelist: MyObject
-posstypes: class
+posstypes: 
 value: 
 returntype: 
 pridec: 
@@ -166,19 +171,26 @@ implementsClass:
 |   |   +--- 
 |   |   +---y
 |   |   +---)
+|   +---                    
+|   +-*-display (HAS STATE)
 |   +--- 
-|   +-*-ReportMyNumber (HAS STATE)
+|   +---dialog
+|   +--- 
+|   +---myNumber
+|   +---[ NEWLINE ]
+|   +---                
+|   +---end
+|   +--- 
 |   +---[ NEWLINE ]
 |   +---            
 |   +---end
-+--- 
-+---script
+|   +--- 
+|   +---script
 +--- 
 +-----
 |   +--- 
 |   +---MyObject
 |   +---[ NEWLINE ]
-+---[ NEWLINE ]
 -=: COMPUTED VALUE :=-
 SUCCESS: 0
 VALUE: 0
@@ -233,7 +245,7 @@ LONG ATTRIBUTES:
     IS BLOCK: 
     OBJECT TYPE: HeaderDoc::CPPClass
     NAME: MyObject
-    APIUID: 
+    APIUID: //test_ref/applescript/cl/MyObject
     ABSTRACT: ""
     DISCUSSION: "<p>MyObject class
 doesn't do much."
@@ -268,10 +280,7 @@ doesn't do much."
     HIDECONTENTS: ""
     MAINOBJECT: ""
     LIST ATTRIBUTES: 
-    SHORT ATTRIBUTES: <p><b>Superclass</b></p>
-
-<p><!-- a logicalPath="//test_ref/applescript/cl/class" machineGenerated="true" -->class<!-- /a --></p>
-<p><b>Declared In</b></p><p><a href="../../index.html" logicalPath="//test_ref/doc/header/AppleScript_class_1.test" target="_top" machineGenerated="true">AppleScript class 1</a></p>
+    SHORT ATTRIBUTES: <p><b>Declared In</b></p><p><a href="../../index.html" logicalPath="//test_ref/doc/header/AppleScript_class_1.test" target="_top" machineGenerated="true">AppleScript class 1</a></p>
 
     LONG ATTRIBUTES: 
         TREE COUNT: 1
@@ -484,19 +493,26 @@ OBJECT: MyObject (HeaderDoc::CPPClass)
 |   |   +--- 
 |   |   +---y
 |   |   +---)
+|   +---                    
+|   +-*-display (HAS STATE)
 |   +--- 
-|   +-*-ReportMyNumber (HAS STATE)
+|   +---dialog
+|   +--- 
+|   +---myNumber
+|   +---[ NEWLINE ]
+|   +---                
+|   +---end
+|   +--- 
 |   +---[ NEWLINE ]
 |   +---            
 |   +---end
-+--- 
-+---script
+|   +--- 
+|   +---script
 +--- 
 +-----
 |   +--- 
 |   +---MyObject
 |   +---[ NEWLINE ]
-+---[ NEWLINE ]
 END OF OBJECT
 
 
@@ -510,12 +526,22 @@ OBJECT: ReportMyNumber (HeaderDoc::Function)
 |   +--- 
 |   +---y
 |   +---)
--=-=-=-=-=-=- EODEC -=-=-=-=-=-=-
++---                    
++-*-display (HAS STATE)
 +--- 
-+-*-ReportMyNumber (HAS STATE)
++---dialog
++--- 
++---myNumber
++---[ NEWLINE ]
++---                
++---end
++--- 
+-=-=-=-=-=-=- EODEC -=-=-=-=-=-=-
 +---[ NEWLINE ]
 +---            
 +---end
++--- 
++---script
 END OF OBJECT
 
 
@@ -544,24 +570,28 @@ OBJECT: myNumber (HeaderDoc::Var)
 |   +--- 
 |   +---y
 |   +---)
++---                    
++-*-display (HAS STATE)
 +--- 
-+-*-ReportMyNumber (HAS STATE)
++---dialog
++--- 
++---myNumber
++---[ NEWLINE ]
++---                
++---end
++--- 
 +---[ NEWLINE ]
 +---            
 +---end
++--- 
++---script
 END OF OBJECT
 
 
 
 -=: HTML OUTPUT OF PARSE TREES :=-
 OBJECT: MyObject (HeaderDoc::CPPClass)
-	<span class="keyword">script</span> <!-- a logicalPath="//test_ref/applescript/econst/MyObject //test_ref/applescript/data/MyObject //test_ref/applescript/clconst/MyObject " machineGenerated="true" --><span class="var">MyObject</span><!-- /a --> <span class="comment">-- MyScript has a single property, myNumber</span> 
-	    <span class="comment">(*! Property myNumber with value 0 *)</span>
-	    <span class="keyword">property</span> <!-- a logicalPath="//test_ref/applescript/econst/myNumber //test_ref/applescript/data/myNumber //test_ref/applescript/clconst/myNumber " machineGenerated="true" --><span class="var">myNumber</span><!-- /a --> : <span class="number">0</span> <span class="comment">(*! Function ReportMyNumber *)</span>
-	    <span class="keyword">on</span> <!-- a logicalPath="//test_ref/applescript/instm/ReportMyNumber //test_ref/applescript/clm/ReportMyNumber //test_ref/applescript/intfcm/ReportMyNumber //test_ref/applescript/intfm/ReportMyNumber //test_ref/applescript/func/ReportMyNumber //test_ref/applescript/ftmplt/ReportMyNumber //test_ref/applescript/defn/ReportMyNumber //test_ref/applescript/macro/ReportMyNumber //test_ref/doc/anysymbol/ReportMyNumber" machineGenerated="true" --><span class="function">ReportMyNumber</span><!-- /a -->(
-	        <span class="param">x</span>,
-	        <span class="param">y</span>) <span class="param">ReportMyNumber</span> 
-	<span class="keyword">end</span> <span class="keyword">script</span> <span class="comment">-- MyObject</span>  
+	<span class="keyword">script</span> <!-- a logicalPath="//test_ref/applescript/econst/MyObject //test_ref/applescript/data/MyObject //test_ref/applescript/clconst/MyObject " machineGenerated="true" --><span class="var">MyObject</span><!-- /a --> 
 END OF OBJECT
 
 

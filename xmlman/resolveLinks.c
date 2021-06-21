@@ -3,7 +3,7 @@
  * Synopsis:   Creates links between HTML pages using specially
  *             formed anchors.
  *
- * Last Updated: $Date: 2011/03/14 22:56:12 $
+ * Last Updated: $Date: 2011/08/16 16:54:00 $
  *
  * Copyright (c) 2002-2011 Apple Computer, Inc.  All rights reserved.
  *
@@ -2076,16 +2076,23 @@ void resolveLinks(xmlNode * node, htmlDocPtr dp, char *filename, char *filename_
 				pos = target;
 				while (*pos && *pos != '?' && *pos != '#')
 				    pos++;
-				if (pos < target + 10) {
-				    index = 0;
-				} else {
-				    pos -= 10;
-				    if (strncmp(pos, "index.html", 10))
+
+				char *endpos = pos;
+				while ((pos > target) && *pos != '/')
+				    pos--;
+				if (*pos == '/') pos++;
+
+				char *temp = malloc(endpos - pos + 1);
+				strncpy(temp, pos, endpos - pos);
+				temp[endpos - pos] = '\0';
+
+				if (strcmp(temp, "index.html") && strcmp(temp, "CompositePage.html")) {
 					index = 0;
 				}
 				if (index) {
 				    addAttribute(node, "target", "_top");
 				}
+				free(temp);
 			    }
 			    if (node->content) free(node->content);
 			    node->content = NULL;	/* @@@ LEAK? @@@ */
@@ -4095,6 +4102,11 @@ char *ts_basename(char *path)
     safe_asprintf(&junk, "%s", path); // freed later.
     if (!junk) { fprintf(stderr, "Out of memory.\n"); exit(1); }
     orig = basename(junk);
+
+    if (orig == NULL) {
+	while (pthread_mutex_unlock(&mylock));
+	return NULL;
+    }
 
     // copy = malloc((strlen(orig) + 1) * sizeof(char));
     // strcpy(copy, orig);

@@ -1,4 +1,4 @@
-FrT;@1|>>0|$15|HeaderDoc::Test%22|$4|CODE$7|COMMENT$7|CPPCODE$15|EXPECTED_RESULT$23|EXPECTED_RESULT_ALLDECS$7|FAILMSG$8|FILENAME$4|LANG$4|NAME$7|SUBLANG$4|TYPE$653|Class tclClass1: {superclass_1} {
+FrT;@1|>>0|$15|HeaderDoc::Test%22|$4|CODE$7|COMMENT$7|CPPCODE$15|EXPECTED_RESULT$23|EXPECTED_RESULT_ALLDECS$7|FAILMSG$8|FILENAME$4|LANG$4|NAME$7|SUBLANG$4|TYPE$653|class tclClass1: {superclass_1} {
     constructor
     #     /*!
     #     Attribute 1
@@ -41,7 +41,7 @@ method tclClass1::cm2 { arg_1 arg_2 } {
 $33|# /*!
 #     Class number 1
 #  */
-$0|$17560|-=: TOP LEVEL COMMENT PARSE VALUES :=-
+$0|$17802|-=: TOP LEVEL COMMENT PARSE VALUES :=-
 inHeader: 0
 inClass: 0
 inInterface: 0
@@ -69,9 +69,12 @@ inputCounter: 0
 blockOffset: 0
 fullpath: /test_suite_bogus_path/TCL_class_1.test
 -=: BLOCKPARSE PARSER STATE KEYS :=-
+$parserState->{ASLBRACEPRECURSOR} => 
+$parserState->{ASLBRACEPRECURSORTAG} => 
 $parserState->{FULLPATH} => /test_suite_bogus_path/TCL_class_1.test
 $parserState->{ISFORWARDDECLARATION} => 0
 $parserState->{NEXTTOKENNOCPP} => 0
+$parserState->{afterNL} => 2
 $parserState->{availability} => 
 $parserState->{backslashcount} => 0
 $parserState->{basetype} => 
@@ -116,16 +119,18 @@ $parserState->{occmethod} => 0
 $parserState->{occmethodname} => 
 $parserState->{occparmlabelfound} => 2
 $parserState->{onlyComments} => 0
+$parserState->{parsedParamAtBrace} => ARRAY(OBJID)
 $parserState->{parsedParamList} => ARRAY(OBJID)
 $parserState->{parsedParamParse} => 0
+$parserState->{parsedParamStateAtBrace} => ARRAY(OBJID)
 $parserState->{pendingBracedParameters} => 0
 $parserState->{posstypes} => 
 $parserState->{posstypesPending} => 0
 $parserState->{pplStack} => ARRAY(OBJID)
 $parserState->{preEqualsSymbol} => 
 $parserState->{preTemplateSymbol} => 
-$parserState->{preclasssodtype} => Class
-$parserState->{returntype} => Class tclClass1: { superclass_1 } 
+$parserState->{preclasssodtype} => class
+$parserState->{returntype} => class tclClass1: { superclass_1 } 
 $parserState->{seenBraces} => 0
 $parserState->{seenMacroPart} => 0
 $parserState->{seenTilde} => 0
@@ -134,7 +139,7 @@ $parserState->{simpleTypedef} => 0
 $parserState->{sodclass} => class
 $parserState->{sodname} => tclClass1
 $parserState->{sodtype} => 
-$parserState->{sodtypeclasstoken} => Class
+$parserState->{sodtypeclasstoken} => class
 $parserState->{stackFrozen} => 0
 $parserState->{startOfDec} => 0
 $parserState->{storeDec} => 
@@ -159,7 +164,7 @@ implementsClass:
 -=: LIST OF PARSED PARAMETERS :=-
 Parsed Param 0 => superclass_1
 -=: DUMP OF PARSE TREE :=-
-+---Class
++---class
 +--- 
 +---tclClass1
 +---:
@@ -288,7 +293,7 @@ LONG ATTRIBUTES:
     IS BLOCK: 
     OBJECT TYPE: HeaderDoc::CPPClass
     NAME: tclClass1
-    APIUID: 
+    APIUID: //test_ref/tcl/cl/tclClass1
     ABSTRACT: ""
     DISCUSSION: "<p>Class number 1
 "
@@ -457,7 +462,7 @@ LONG ATTRIBUTES:
         LONG ATTRIBUTES: 
 -=: NAMED OBJECT PARSE TREES :=-
 OBJECT: tclClass1 (HeaderDoc::CPPClass)
-+---Class
++---class
 +--- 
 +---tclClass1
 +---:
@@ -646,7 +651,7 @@ END OF OBJECT
 
 -=: HTML OUTPUT OF PARSE TREES :=-
 OBJECT: tclClass1 (HeaderDoc::CPPClass)
-	<!-- a logicalPath="//test_ref/tcl/econst/Class //test_ref/tcl/data/Class //test_ref/tcl/clconst/Class " machineGenerated="true" --><span class="var">Class</span><!-- /a --> <!-- a logicalPath="//test_ref/tcl/cl/tclClass1 //test_ref/tcl/tdef/tclClass1 //test_ref/tcl/tag/tclClass1 //test_ref/tcl/struct/tclClass1 //test_ref/tcl/intf/tclClass1 //test_ref/doc/anysymbol/tclClass1" machineGenerated="true" --><span class="type">tclClass1</span><!-- /a -->: {
+	<!-- a logicalPath="//test_ref/tcl/econst/class //test_ref/tcl/data/class //test_ref/tcl/clconst/class " machineGenerated="true" --><span class="var">class</span><!-- /a --> <!-- a logicalPath="//test_ref/tcl/cl/tclClass1 //test_ref/tcl/tdef/tclClass1 //test_ref/tcl/tag/tclClass1 //test_ref/tcl/struct/tclClass1 //test_ref/tcl/intf/tclClass1 //test_ref/doc/anysymbol/tclClass1" machineGenerated="true" --><span class="type">tclClass1</span><!-- /a -->: {
 	    <span class="param">superclass_1</span>
 	} {
 	    <span class="keyword">constructor</span> <span class="comment">#/*!</span> 
@@ -679,7 +684,7 @@ END OF OBJECT
 
 
 
-$37651|-=: TOP LEVEL COMMENT PARSE VALUES :=-
+$37893|-=: TOP LEVEL COMMENT PARSE VALUES :=-
 inHeader: 0
 inClass: 0
 inInterface: 0
@@ -707,9 +712,12 @@ inputCounter: 0
 blockOffset: 0
 fullpath: /test_suite_bogus_path/TCL_class_1.test
 -=: BLOCKPARSE PARSER STATE KEYS :=-
+$parserState->{ASLBRACEPRECURSOR} => 
+$parserState->{ASLBRACEPRECURSORTAG} => 
 $parserState->{FULLPATH} => /test_suite_bogus_path/TCL_class_1.test
 $parserState->{ISFORWARDDECLARATION} => 0
 $parserState->{NEXTTOKENNOCPP} => 0
+$parserState->{afterNL} => 2
 $parserState->{availability} => 
 $parserState->{backslashcount} => 0
 $parserState->{basetype} => 
@@ -754,16 +762,18 @@ $parserState->{occmethod} => 0
 $parserState->{occmethodname} => 
 $parserState->{occparmlabelfound} => 2
 $parserState->{onlyComments} => 0
+$parserState->{parsedParamAtBrace} => ARRAY(OBJID)
 $parserState->{parsedParamList} => ARRAY(OBJID)
 $parserState->{parsedParamParse} => 0
+$parserState->{parsedParamStateAtBrace} => ARRAY(OBJID)
 $parserState->{pendingBracedParameters} => 0
 $parserState->{posstypes} => 
 $parserState->{posstypesPending} => 0
 $parserState->{pplStack} => ARRAY(OBJID)
 $parserState->{preEqualsSymbol} => 
 $parserState->{preTemplateSymbol} => 
-$parserState->{preclasssodtype} => Class
-$parserState->{returntype} => Class tclClass1: { superclass_1 } 
+$parserState->{preclasssodtype} => class
+$parserState->{returntype} => class tclClass1: { superclass_1 } 
 $parserState->{seenBraces} => 0
 $parserState->{seenMacroPart} => 0
 $parserState->{seenTilde} => 0
@@ -772,7 +782,7 @@ $parserState->{simpleTypedef} => 0
 $parserState->{sodclass} => class
 $parserState->{sodname} => tclClass1
 $parserState->{sodtype} => 
-$parserState->{sodtypeclasstoken} => Class
+$parserState->{sodtypeclasstoken} => class
 $parserState->{stackFrozen} => 0
 $parserState->{startOfDec} => 0
 $parserState->{storeDec} => 
@@ -797,7 +807,7 @@ implementsClass:
 -=: LIST OF PARSED PARAMETERS :=-
 Parsed Param 0 => superclass_1
 -=: DUMP OF PARSE TREE :=-
-+---Class
++---class
 +--- 
 +---tclClass1
 +---:
@@ -926,7 +936,7 @@ LONG ATTRIBUTES:
     IS BLOCK: 
     OBJECT TYPE: HeaderDoc::CPPClass
     NAME: tclClass1
-    APIUID: 
+    APIUID: //test_ref/tcl/cl/tclClass1
     ABSTRACT: ""
     DISCUSSION: "<p>Class number 1
 "
@@ -1599,7 +1609,7 @@ LONG ATTRIBUTES:
         LONG ATTRIBUTES: 
 -=: NAMED OBJECT PARSE TREES :=-
 OBJECT: tclClass1 (HeaderDoc::CPPClass)
-+---Class
++---class
 +--- 
 +---tclClass1
 +---:
@@ -1964,7 +1974,7 @@ END OF OBJECT
 
 -=: HTML OUTPUT OF PARSE TREES :=-
 OBJECT: tclClass1 (HeaderDoc::CPPClass)
-	<!-- a logicalPath="//test_ref/tcl/econst/Class //test_ref/tcl/data/Class //test_ref/tcl/clconst/Class " machineGenerated="true" --><span class="var">Class</span><!-- /a --> <!-- a logicalPath="//test_ref/tcl/cl/tclClass1 //test_ref/tcl/tdef/tclClass1 //test_ref/tcl/tag/tclClass1 //test_ref/tcl/struct/tclClass1 //test_ref/tcl/intf/tclClass1 //test_ref/doc/anysymbol/tclClass1" machineGenerated="true" --><span class="type">tclClass1</span><!-- /a -->: {
+	<!-- a logicalPath="//test_ref/tcl/econst/class //test_ref/tcl/data/class //test_ref/tcl/clconst/class " machineGenerated="true" --><span class="var">class</span><!-- /a --> <!-- a logicalPath="//test_ref/tcl/cl/tclClass1 //test_ref/tcl/tdef/tclClass1 //test_ref/tcl/tag/tclClass1 //test_ref/tcl/struct/tclClass1 //test_ref/tcl/intf/tclClass1 //test_ref/doc/anysymbol/tclClass1" machineGenerated="true" --><span class="type">tclClass1</span><!-- /a -->: {
 	    <span class="param">superclass_1</span>
 	} {
 	    <span class="keyword">constructor</span> <span class="comment">#/*!</span> 

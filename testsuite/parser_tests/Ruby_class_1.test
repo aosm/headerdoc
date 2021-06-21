@@ -10,7 +10,7 @@ def myfunc(name)
   @name = name.capitalize
 end
 $21|    This is a class.
-$0|$5884|-=: TOP LEVEL COMMENT PARSE VALUES :=-
+$0|$6046|-=: TOP LEVEL COMMENT PARSE VALUES :=-
 inHeader: 0
 inClass: 0
 inInterface: 0
@@ -41,6 +41,7 @@ fullpath: /test_suite_bogus_path/Ruby_class_1.test
 $parserState->{FULLPATH} => /test_suite_bogus_path/Ruby_class_1.test
 $parserState->{ISFORWARDDECLARATION} => 0
 $parserState->{NEXTTOKENNOCPP} => 0
+$parserState->{afterNL} => 2
 $parserState->{availability} => 
 $parserState->{backslashcount} => 0
 $parserState->{basetype} => 
@@ -86,8 +87,10 @@ $parserState->{occmethod} => 0
 $parserState->{occmethodname} => 
 $parserState->{occparmlabelfound} => 3
 $parserState->{onlyComments} => 0
+$parserState->{parsedParamAtBrace} => ARRAY(OBJID)
 $parserState->{parsedParamList} => ARRAY(OBJID)
 $parserState->{parsedParamParse} => 1
+$parserState->{parsedParamStateAtBrace} => ARRAY(OBJID)
 $parserState->{posstypes} => 
 $parserState->{posstypesPending} => 0
 $parserState->{pplStack} => ARRAY(OBJID)
@@ -191,7 +194,7 @@ LONG ATTRIBUTES:
     IS BLOCK: 
     OBJECT TYPE: HeaderDoc::CPPClass
     NAME: Greeter
-    APIUID: 
+    APIUID: //test_ref/ruby/cl/Greeter
     ABSTRACT: ""
     DISCUSSION: "<p>This is a class.
 "
