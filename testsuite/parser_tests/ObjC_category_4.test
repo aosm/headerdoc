@@ -11,7 +11,7 @@ $322|/*!
         @abstract The TrainsUnderWater category adds submarine methods to the Train class.
         @discussion Methods declared in the TrainsUnderWater category of the Train class can only be used with properly equiped Train objects and appropriate infrastructure.
 */
-$0|$13784|-=: TOP LEVEL COMMENT PARSE VALUES :=-
+$0|$14051|-=: TOP LEVEL COMMENT PARSE VALUES :=-
 inHeader: 0
 inClass: 1
 inInterface: 0
@@ -39,8 +39,11 @@ inputCounter: 0
 blockOffset: 0
 fullpath: /test_suite_bogus_path/ObjC_category_4.test
 -=: BLOCKPARSE PARSER STATE KEYS :=-
+$parserState->{ASLBRACEPRECURSOR} => 
+$parserState->{ASLBRACEPRECURSORTAG} => 
 $parserState->{FULLPATH} => /test_suite_bogus_path/ObjC_category_4.test
 $parserState->{NEXTTOKENNOCPP} => 0
+$parserState->{afterNL} => 2
 $parserState->{availability} => 
 $parserState->{backslashcount} => 0
 $parserState->{basetype} => 
@@ -82,8 +85,10 @@ $parserState->{occmethod} => 0
 $parserState->{occmethodname} => 
 $parserState->{occparmlabelfound} => 1
 $parserState->{onlyComments} => 0
+$parserState->{parsedParamAtBrace} => ARRAY(OBJID)
 $parserState->{parsedParamList} => ARRAY(OBJID)
 $parserState->{parsedParamParse} => 0
+$parserState->{parsedParamStateAtBrace} => ARRAY(OBJID)
 $parserState->{posstypes} => 
 $parserState->{posstypesPending} => 0
 $parserState->{pplStack} => ARRAY(OBJID)
@@ -216,7 +221,7 @@ LONG ATTRIBUTES:
     IS BLOCK: 
     OBJECT TYPE: HeaderDoc::ObjCCategory
     NAME: Trains_2(TrainsUnderWater)
-    APIUID: 
+    APIUID: //test_ref/occ/cat/Trains_2(TrainsUnderWater)
     ABSTRACT: "<p>The TrainsUnderWater category adds submarine methods to the Train class.
 "
     DISCUSSION: "<p>Methods declared in the TrainsUnderWater category of the Train class can only be used with properly equiped Train objects and appropriate infrastructure.
@@ -277,7 +282,7 @@ LONG ATTRIBUTES:
         XMLTHROWS: ""
         UPDATED: ""
         LINKAGESTATE: ""
-        ACCESSCONTROL: ""
+        ACCESSCONTROL: "private"
         AVAILABILITY: ""
         LINKUID: ""
         ORIGCLASS: ""
@@ -471,7 +476,7 @@ END OF OBJECT
 
 
 
-$13784|-=: TOP LEVEL COMMENT PARSE VALUES :=-
+$14051|-=: TOP LEVEL COMMENT PARSE VALUES :=-
 inHeader: 0
 inClass: 1
 inInterface: 0
@@ -499,8 +504,11 @@ inputCounter: 0
 blockOffset: 0
 fullpath: /test_suite_bogus_path/ObjC_category_4.test
 -=: BLOCKPARSE PARSER STATE KEYS :=-
+$parserState->{ASLBRACEPRECURSOR} => 
+$parserState->{ASLBRACEPRECURSORTAG} => 
 $parserState->{FULLPATH} => /test_suite_bogus_path/ObjC_category_4.test
 $parserState->{NEXTTOKENNOCPP} => 0
+$parserState->{afterNL} => 2
 $parserState->{availability} => 
 $parserState->{backslashcount} => 0
 $parserState->{basetype} => 
@@ -542,8 +550,10 @@ $parserState->{occmethod} => 0
 $parserState->{occmethodname} => 
 $parserState->{occparmlabelfound} => 1
 $parserState->{onlyComments} => 0
+$parserState->{parsedParamAtBrace} => ARRAY(OBJID)
 $parserState->{parsedParamList} => ARRAY(OBJID)
 $parserState->{parsedParamParse} => 0
+$parserState->{parsedParamStateAtBrace} => ARRAY(OBJID)
 $parserState->{posstypes} => 
 $parserState->{posstypesPending} => 0
 $parserState->{pplStack} => ARRAY(OBJID)
@@ -676,7 +686,7 @@ LONG ATTRIBUTES:
     IS BLOCK: 
     OBJECT TYPE: HeaderDoc::ObjCCategory
     NAME: Trains_2(TrainsUnderWater)
-    APIUID: 
+    APIUID: //test_ref/occ/cat/Trains_2(TrainsUnderWater)
     ABSTRACT: "<p>The TrainsUnderWater category adds submarine methods to the Train class.
 "
     DISCUSSION: "<p>Methods declared in the TrainsUnderWater category of the Train class can only be used with properly equiped Train objects and appropriate infrastructure.
@@ -737,7 +747,7 @@ LONG ATTRIBUTES:
         XMLTHROWS: ""
         UPDATED: ""
         LINKAGESTATE: ""
-        ACCESSCONTROL: ""
+        ACCESSCONTROL: "private"
         AVAILABILITY: ""
         LINKUID: ""
         ORIGCLASS: ""

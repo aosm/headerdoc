@@ -198,7 +198,7 @@ source in the chain this reference is not retained.  The list 'owner' i.e. the
 client that creates the event, not the work-loop, is expected to retain the
 source.
 */
-$0|$197336|-=: TOP LEVEL COMMENT PARSE VALUES :=-
+$0|$197582|-=: TOP LEVEL COMMENT PARSE VALUES :=-
 inHeader: 0
 inClass: 1
 inInterface: 0
@@ -226,9 +226,12 @@ inputCounter: 0
 blockOffset: 0
 fullpath: /test_suite_bogus_path/class_3.test
 -=: BLOCKPARSE PARSER STATE KEYS :=-
+$parserState->{ASLBRACEPRECURSOR} => 
+$parserState->{ASLBRACEPRECURSORTAG} => 
 $parserState->{FULLPATH} => /test_suite_bogus_path/class_3.test
 $parserState->{ISFORWARDDECLARATION} => 0
 $parserState->{NEXTTOKENNOCPP} => 0
+$parserState->{afterNL} => 2
 $parserState->{availability} => 
 $parserState->{backslashcount} => 0
 $parserState->{basetype} => 
@@ -273,8 +276,10 @@ $parserState->{occmethod} => 0
 $parserState->{occmethodname} => 
 $parserState->{occparmlabelfound} => 4
 $parserState->{onlyComments} => 0
+$parserState->{parsedParamAtBrace} => ARRAY(OBJID)
 $parserState->{parsedParamList} => ARRAY(OBJID)
 $parserState->{parsedParamParse} => 1
+$parserState->{parsedParamStateAtBrace} => ARRAY(OBJID)
 $parserState->{posstypes} => 
 $parserState->{posstypesPending} => 0
 $parserState->{pplStack} => ARRAY(OBJID)
@@ -940,7 +945,7 @@ LONG ATTRIBUTES:
     IS BLOCK: 
     OBJECT TYPE: HeaderDoc::CPPClass
     NAME: IOEventSource
-    APIUID: 
+    APIUID: //test_ref/cpp/cl/IOEventSource
     ABSTRACT: "<p>Abstract class for all work-loop event sources.
 "
     DISCUSSION: "<p>The IOEventSource declares the abstract super class that all
@@ -8546,7 +8551,7 @@ END OF OBJECT
 
 
 
-$209952|-=: TOP LEVEL COMMENT PARSE VALUES :=-
+$210201|-=: TOP LEVEL COMMENT PARSE VALUES :=-
 inHeader: 0
 inClass: 1
 inInterface: 0
@@ -8574,9 +8579,12 @@ inputCounter: 0
 blockOffset: 0
 fullpath: /test_suite_bogus_path/class_3.test
 -=: BLOCKPARSE PARSER STATE KEYS :=-
+$parserState->{ASLBRACEPRECURSOR} => 
+$parserState->{ASLBRACEPRECURSORTAG} => 
 $parserState->{FULLPATH} => /test_suite_bogus_path/class_3.test
 $parserState->{ISFORWARDDECLARATION} => 0
 $parserState->{NEXTTOKENNOCPP} => 0
+$parserState->{afterNL} => 2
 $parserState->{availability} => 
 $parserState->{backslashcount} => 0
 $parserState->{basetype} => 
@@ -8621,8 +8629,10 @@ $parserState->{occmethod} => 0
 $parserState->{occmethodname} => 
 $parserState->{occparmlabelfound} => 4
 $parserState->{onlyComments} => 0
+$parserState->{parsedParamAtBrace} => ARRAY(OBJID)
 $parserState->{parsedParamList} => ARRAY(OBJID)
 $parserState->{parsedParamParse} => 1
+$parserState->{parsedParamStateAtBrace} => ARRAY(OBJID)
 $parserState->{posstypes} => 
 $parserState->{posstypesPending} => 0
 $parserState->{pplStack} => ARRAY(OBJID)
@@ -9288,7 +9298,7 @@ LONG ATTRIBUTES:
     IS BLOCK: 
     OBJECT TYPE: HeaderDoc::CPPClass
     NAME: IOEventSource
-    APIUID: 
+    APIUID: //test_ref/cpp/cl/IOEventSource
     ABSTRACT: "<p>Abstract class for all work-loop event sources.
 "
     DISCUSSION: "<p>The IOEventSource declares the abstract super class that all
@@ -9389,7 +9399,7 @@ source.
         XMLTHROWS: ""
         UPDATED: ""
         LINKAGESTATE: ""
-        ACCESSCONTROL: "public"
+        ACCESSCONTROL: "protected"
         AVAILABILITY: ""
         LINKUID: ""
         ORIGCLASS: ""

@@ -4,7 +4,7 @@
 # Synopsis: Scans a file for headerDoc comments and generates an HTML
 #           file from the comments it finds.
 #
-# Last Updated: $Date: 2011/05/06 20:29:05 $
+# Last Updated: $Date: 2014/02/14 17:55:29 $
 #
 # ObjC additions by SKoT McDonald <skot@tomandandy.com> Aug 2001 
 #
@@ -29,7 +29,7 @@
 #
 # @APPLE_LICENSE_HEADER_END@
 #
-# $Revision: 1304738945 $
+# $Revision: 1392429329 $
 #####################################################################
 
 
@@ -52,7 +52,7 @@
 #     @abstract
 #         The version number of the HeaderDoc suite.
 #  */
-my $HeaderDoc_Version = "8.8";
+my $HeaderDoc_Version = "8.9";
 
 # /*!
 #     @abstract
@@ -61,7 +61,7 @@ my $HeaderDoc_Version = "8.8";
 #         In the git repository, contains the number of seconds since
 #         January 1, 1970.
 #  */
-my $VERSION = '$Revision: 1304738945 $';
+my $VERSION = '$Revision: 1392429329 $';
 
 # /*!
 #     @abstract
@@ -102,6 +102,22 @@ $HeaderDoc::parseIfElse = 0;
 #         disabled for all methods.
 #  */
 $HeaderDoc::nameFromAPIRefReturnsOnlyName = 0;
+
+# /*! @abstract
+#         The version of the test suite that matches this version
+#         of HeaderDoc.
+#     @discussion
+#         Do not change this value.  The actual value is automatically
+#         populated by the Makefile during installation based on the
+#         contents of the file
+#
+#         [source_directory]/testsuite/version
+#
+#         When the test suite changes in an incompatible way, the
+#         version number in that file should be bumped before the
+#         next version of HeaderDoc ships.
+#  */
+$HeaderDoc::testsuite_version="0";
 
 
 ################ General Constants ###################################
@@ -374,11 +390,11 @@ $HeaderDoc::idl_language = "idl";
 #     @abstract
 #         The default C compiler.
 #     @discussion
-#         By default, HeaderDoc uses <code>/usr/bin/gcc</code> to calculate
+#         By default, HeaderDoc uses <code>/usr/bin/cc</code> to calculate
 #         the values of complex #define macros.  This can be overridden with
 #         the <code>cCompiler</code> field in the HeaderDoc config file.
 #  */
-$HeaderDoc::c_compiler = "/usr/bin/gcc";
+$HeaderDoc::c_compiler = "/usr/bin/cc";
 
 # /*!
 #     @abstract
@@ -503,6 +519,7 @@ $| = 1;
 # Check options in BEGIN block to avoid overhead of loading supporting 
 # modules in error cases.
 my $uninstalledModulesPath;
+my $devtoolsModulesPath;
 BEGIN {
     use FindBin qw ($Bin);
     use Cwd;
@@ -987,9 +1004,10 @@ BEGIN {
 		$pathSeparator = "/";
 		$isMacOS = 0;
     }
-	$uninstalledModulesPath = "$FindBin::Bin"."$pathSeparator"."Modules";
+    $uninstalledModulesPath = "$FindBin::Bin"."$pathSeparator"."Modules";
+    $devtoolsModulesPath = "$FindBin::Bin"."$pathSeparator".".."."$pathSeparator"."share"."$pathSeparator"."headerdoc"."$pathSeparator"."Modules";
 	
-	foreach (qw(Mac::Files)) {
+    foreach (qw(Mac::Files)) {
 	    $MOD_AVAIL{$_} = eval "use $_; 1";
     }
 
@@ -1036,6 +1054,8 @@ BEGIN {
 }
 
     use lib $uninstalledModulesPath;
+    use lib $devtoolsModulesPath;
+
     use HeaderDoc::Utilities qw(linesFromFile getLangAndSubLangFromFilename dumpCaches stripLeading);
     use HeaderDoc::Utilities qw(processTopLevel);
     use locale;
@@ -1113,6 +1133,7 @@ BEGIN {
 	$options{H} = 1;
 	$options{j} = 1;
 	$options{n} = 1;
+	$options{N} = 1;
 	$options{p} = 1;
 	$options{O} = 1;
 	$options{Q} = 1;
@@ -1591,7 +1612,6 @@ use lib $uninstalledModulesPath;
 # use Devel::Peek;
 
 # Classes and other modules specific to HeaderDoc
-# use HeaderDoc::DBLookup;
 use HeaderDoc::Utilities qw(linesFromFile emptyHDok addAvailabilityMacro);
 use HeaderDoc::Utilities qw(findRelativePath safeName
                             printArray linesFromFile printHash
@@ -1653,7 +1673,16 @@ $HeaderDoc::modulesPath =~ s/ParseTree.pm$//so;
 #         <code>/usr/share/headerdoc/testsuite</code>
 #  */
 $HeaderDoc::testdir = $HeaderDoc::modulesPath."/../../testsuite";
+
+
+# /*! @abstract
+#         Tells whether the test suite is being run from a checked-out
+#         copy of the HeaderDoc sources or not.
+#  */
+$HeaderDoc::local_tests = 1;
+
 if ( ! -d $HeaderDoc::testdir ) {
+	$HeaderDoc::local_tests = 0;
 	$HeaderDoc::testdir = "/usr/share/headerdoc/testsuite";
 }
 
@@ -1729,11 +1758,12 @@ if ($^O =~ /MacOS/io) {
 	$systemPreferencesPath = "/Library/Preferences";
 	$systemAppSupportPath = "/Library/Application Support/Apple/HeaderDoc";
 }
+my $devtoolsPreferencesPath = "$FindBin::Bin"."$pathSeparator".".."."$pathSeparator"."share"."$pathSeparator"."headerdoc"."$pathSeparator"."conf";
 
 # The order of files in this array determines the order that the config files will be read
 # If there are multiple config files that declare a value for the same key, the last one read wins
 my $CWD = cwd();
-my @configFiles = ($systemPreferencesPath.$pathSeparator.$preferencesConfigFileName, $usersPreferencesPath.$pathSeparator.$preferencesConfigFileName, $Bin.$pathSeparator.$localConfigFileName, $CWD.$pathSeparator.$localConfigFileName);
+my @configFiles = ($devtoolsPreferencesPath.$pathSeparator.$preferencesConfigFileName, $systemPreferencesPath.$pathSeparator.$preferencesConfigFileName, $usersPreferencesPath.$pathSeparator.$preferencesConfigFileName, $Bin.$pathSeparator.$localConfigFileName, $CWD.$pathSeparator.$localConfigFileName);
 
 if (length($HeaderDoc::specified_config_file)) {
 	@configFiles = ();
@@ -1777,14 +1807,18 @@ my %config = (
     introductionName => "Introduction",
     superclassName => "Superclass",
     IDLLanguage => "idl",
-    cCompiler => "/usr/bin/gcc"
+    cCompiler => "/usr/bin/cc"
 );
 
 # print "CONFIG FILES: @{[ @configFiles ]}\n";
 %config = &updateHashFromConfigFiles(\%config,\@configFiles);
 
 # Read the static availability macro text from the modules folder.
-getAvailabilityMacros($HeaderDoc::modulesPath."Availability.list", $quietLevel);
+if ( -f $HeaderDoc::modulesPath."../../Availability.list") {
+	getAvailabilityMacros($HeaderDoc::modulesPath."../../Availability.list", 1);
+} else {
+	getAvailabilityMacros($HeaderDoc::modulesPath."Availability.list", $quietLevel);
+}
 
 if ($config{"ignorePrefixes"}) {
     my $localDebug = 0;
@@ -1869,7 +1903,7 @@ if ($config{"styleSheetExtrasFile"} ne "") {
     my $oldRS = $/;
     $/ = undef;
     # my @extrasFiles = ($Bin.$pathSeparator.$basename, $usersPreferencesPath.$pathSeparator.$basename, $basename);
-    my @extrasFiles = ($systemPreferencesPath.$pathSeparator.$basename, $usersPreferencesPath.$pathSeparator.$basename, $Bin.$pathSeparator.$basename, $CWD.$pathSeparator.$basename, $usersAppSupportPath.$pathSeparator.$basename, $systemAppSupportPath.$pathSeparator.$basename);
+    my @extrasFiles = ($devtoolsPreferencesPath.$pathSeparator.$basename, $systemPreferencesPath.$pathSeparator.$basename, $usersPreferencesPath.$pathSeparator.$basename, $Bin.$pathSeparator.$basename, $CWD.$pathSeparator.$basename, $usersAppSupportPath.$pathSeparator.$basename, $systemAppSupportPath.$pathSeparator.$basename);
     foreach my $filename (@extrasFiles) {
 	if (open(READFILE, "<$filename")) {
 		$HeaderDoc::styleSheetExtras = <READFILE>;
@@ -2048,11 +2082,6 @@ if ($config{"superclassName"}) {
 }
 
 
-# ################ Exporting ##############################
-# if ($export || $testingExport) {
-	# HeaderDoc::DBLookup->loadUsingFolderAndFiles($lookupTableDir, $functionFilename, $typesFilename, $enumsFilename);
-# }
-
 ################### States ###########################################
 my $inHeader        = 0;
 my $inJavaSource    = 0;
@@ -2140,7 +2169,7 @@ foreach my $inputFile (@inputFiles) {
     my ($encoding, $arrayref) = linesFromFile($inputFile, 1);
     my @rawInputLines = @{$arrayref};
     if ($debugging) { print STDERR "Checking file $inputFile\n"; }
-    # Grab any #include directives.
+    # Grab any #include or #import directives.
     processIncludes(\@rawInputLines, $fullpath, $lang, $sublang);
 }
 if ($debugging) { print STDERR "Done processing includes.  Fixing dependencies.\n"; }
@@ -2245,6 +2274,12 @@ foreach my $inputFile (@fileList) {
 
     print STDERR "Top Level Point 200\n" if ($tlhangDebug);
     ($rootFileName, $lang, $sublang) = getLangAndSubLangFromFilename($filename);
+
+    if ($sublang eq "IDL") {
+	$cppAccessControlState = "public:"; # IDLs have no notion of protection, typically.
+    }
+
+    $HeaderDoc::OptionalOrRequired = "";
 
     my $rootOutputDir;
     if (length ($specifiedOutputDir)) {
@@ -2420,6 +2455,15 @@ print STDERR "REDO" if ($debugging);
         my @inputLines = @$arrayRef;
 	# $HeaderDoc::nodec = 0;
 
+	$cppAccessControlState = "protected:"; # the default in C++
+	$objcAccessControlState = "private:"; # the default in Objective C
+
+	if ($sublang eq "IDL") {
+		$cppAccessControlState = "public:"; # IDLs have no notion of protection, typically.
+	}
+
+	$HeaderDoc::AccessControlState = "";
+
 	print STDERR "Top Level Point 705\n" if ($tlhangDebug);
 
 	    # look for /*! comments and collect all comment fields into the appropriate objects
@@ -2443,9 +2487,10 @@ print STDERR "REDO" if ($debugging);
 			my $line = "";           
 
 			# print STDERR "inMLC: $inMLC\n";
-			print STDERR "LINE: \"".$inputLines[$inputCounter]."\"\n" if ($localDebug);
+			print STDERR "LINE: \"".$inputLines[$inputCounter]."\"\n" if ($localDebug || $includeDebug);
 	        
-			if ($inputLines[$inputCounter] =~ /^\s*#include[ \t]+(.*)$/) {
+			if ($inputLines[$inputCounter] =~ /^\s*#(?:include|import)[ \t]+(.*)$/) {
+				print STDERR "Include line: $1\n" if ($includeDebug);
 				my $rest = $1;
 				$rest =~ s/^\s*//s;
 				$rest =~ s/\s*$//s;
@@ -2461,6 +2506,7 @@ print STDERR "REDO" if ($debugging);
 					push(@HeaderDoc::cppHashList, $includehash);
 # print STDERR "PUSH HASH\n";
 					push(@HeaderDoc::cppArgHashList, $HeaderDoc::HeaderFileCPPArgHashHash{$filename});
+					print STDERR "Adding include for $filename.\n" if ($includeDebug);
 				}
 			}
 	        	print STDERR "Input line number[1]: $inputCounter\n" if ($localDebug);
@@ -2988,6 +3034,8 @@ print STDERR "REDO" if ($debugging);
 			print STDERR "FOUND.  MERGING HASHES\n" if ($includeDebug);
 			%headercpphash = (%headercpphash, %{$HeaderDoc::HeaderFileCPPHashHash{$includedfilename}});
 			%headercpparghash = (%headercpparghash, %{$HeaderDoc::HeaderFileCPPArgHashHash{$includedfilename}});
+
+			printCPPHashes(\%headercpphash, \%headercpparghash) if ($includeDebug)
 		}
 		print STDERR "\n" if ($includeDebug);
 	}
@@ -3062,6 +3110,7 @@ print STDERR "REDO" if ($debugging);
                     		print STDERR "$fullpath:$linenum: warning: Couldn't find Header object that owns the category with name $categoryName.\n";
 			}
 			my $assocapio = $associatedClass->APIOwner();
+			$assocapio->resetAppleRefUsed();
 			if ($man_output) {
 				$assocapio->writeHeaderElementsToManPage();
 			} elsif ($function_list_output) {
@@ -3069,6 +3118,8 @@ print STDERR "REDO" if ($debugging);
 			} elsif ($xml_output) {
 				$assocapio->writeHeaderElementsToXMLPage();
 			} else {
+				$assocapio->fixupTypeRequests();
+				$assocapio->setupAPIReferences();
 				$assocapio->createFramesetFile();
 				$assocapio->createTOCFile();
 				$assocapio->writeHeaderElements(); 
@@ -3097,6 +3148,7 @@ print STDERR "REDO" if ($debugging);
 	$headerObject->writeHeaderElementsToXMLPage();
       } else {
 	$headerObject->fixupTypeRequests();
+	$headerObject->setupAPIReferences();
 	# SDump($headerObject, "point5a1");
 	$headerObject->createFramesetFile();
 	# SDump($headerObject, "point5a2");
@@ -4404,7 +4456,8 @@ sub newtest
 		exit(-1);
 	}
     }
-    $test->writeToFile("$filename");
+    $test->writeToFile($filename);
+    $test->writeToPlist($filename);
     print "Wrote test data to \"$filename\"\n";
     $test->dbprint();
 }
@@ -4439,16 +4492,34 @@ sub runtests
 	$force = 1;
     }
 
+    my $testdir = $HeaderDoc::testdir;
+    my ($encoding, $linesref) = linesFromFile($testdir.$pathSeparator."version", 0);
+    my $installedversion = "";
+    if ($linesref) {
+	my @lines = @{$linesref};
+	$installedversion = $lines[0];
+    }
+    $installedversion =~ s/^\s*//sg;
+    $installedversion =~ s/\s*$//sg;
+    if (!$HeaderDoc::local_tests) {
+	if ($installedversion ne $HeaderDoc::testsuite_version) {
+		print STDERR "Test suite not up-to-date.  Please install the test suite that matches this\n".
+			"version of HeaderDoc by downloading the source tarball from opensource.apple.com\n".
+			"and running 'make realinstall' or 'make installsource'.\n";
+		$HeaderDoc::exitstatus = 1;
+		return (0, 1);
+	}
+    }
 
     my %config = (
-	cCompiler => "/usr/bin/gcc"
+	cCompiler => "/usr/bin/cc"
     );
 
     my $localConfigFileName = "headerDoc2HTML.config";
     my $preferencesConfigFileName = "com.apple.headerDoc2HTML.config";
 
     my $CWD = cwd();
-    my @configFiles = ($systemPreferencesPath.$pathSeparator.$preferencesConfigFileName, $usersPreferencesPath.$pathSeparator.$preferencesConfigFileName, $Bin.$pathSeparator.$localConfigFileName, $CWD.$pathSeparator.$localConfigFileName);
+    my @configFiles = ($devtoolsPreferencesPath.$pathSeparator.$preferencesConfigFileName, $systemPreferencesPath.$pathSeparator.$preferencesConfigFileName, $usersPreferencesPath.$pathSeparator.$preferencesConfigFileName, $Bin.$pathSeparator.$localConfigFileName, $CWD.$pathSeparator.$localConfigFileName);
 
     %config = &updateHashFromConfigFiles(\%config,\@configFiles);
 
@@ -4534,7 +4605,7 @@ sub runtests
 
     print "\e[39m\n";
 
-    if ($fail_count) { $HeaderDoc::exitstatus = -1; }
+    if ($fail_count) { $HeaderDoc::exitstatus = 1; }
 }
 
 # /*!
@@ -4563,6 +4634,12 @@ sub runtestlist
 		}
 		my $test = HeaderDoc::Test->new();
 		$test->readFromFile($filename);
+
+		my $plist = $filename;
+		$plist =~ s/\.test$/\.plist/g;
+		if (! -f $plist) {
+			$test->writeToPlist($filename);
+		}
 		print "Test \"".$test->{NAME}."\": ";
 
 		my $coretestfail = $test->runTest(\@ignore_re);
@@ -4583,6 +4660,7 @@ sub runtestlist
 			$test->{EXPECTED_RESULT} = $test->{RESULT};
 			$test->{EXPECTED_RESULT_ALLDECS} = $test->{RESULT_ALLDECS};
 			$test->writeToFile($filename);
+			$test->writeToPlist($filename);
 			$ok_count++;
 		} elsif (($test->{FILTERED_RESULT} eq $test->{EXPECTED_FILTERED_RESULT}) &&
 		    ($test->{FILTERED_RESULT_ALLDECS} eq $test->{EXPECTED_FILTERED_RESULT_ALLDECS})) {
@@ -4595,6 +4673,7 @@ sub runtestlist
 
 			if ($force) {
 				$test->writeToFile($filename);
+				$test->writeToPlist($filename);
 			}
 
 			# $test->showresults();
@@ -4651,6 +4730,7 @@ sub runtestlist
 						$test->{EXPECTED_RESULT} = $test->{RESULT};
 						$test->{EXPECTED_RESULT_ALLDECS} = $test->{RESULT_ALLDECS};
 						$test->writeToFile($filename);
+						$test->writeToPlist($filename);
 						$ok_count++; $continue_update = 0;
 					} elsif ($temp =~ /^\s*skip\s*$/) {
 						$fail_count++; $continue_update = 0;
@@ -4669,6 +4749,7 @@ sub runtestlist
 							$test->{EXPECTED_RESULT} = $test->{RESULT};
 							$test->{EXPECTED_RESULT_ALLDECS} = $test->{RESULT_ALLDECS};
 							$test->writeToFile($filename);
+							$test->writeToPlist($filename);
 							$ok_count++; $continue_update = 0;
 						} else {
 							print STDERR "Still failed.  (At some point, re-running a test will work, but not yet.)\n";
@@ -4783,6 +4864,24 @@ sub runResolveLinksTests
 	print "\n";
 
 	return ($okcount, $failcount);
+}
+
+# /*!
+#     @abstract Prints the CPP hashes for debugging purposes.
+#  */
+sub printCPPHashes
+{
+    my $tokenhashref = shift;
+    my $arghashref = shift;
+
+    my %tokenhash = %{$tokenhashref};
+    my %arghash = %{$arghashref};
+
+    print STDERR "DUMPING CPP HASHES\n";
+    foreach my $token (keys %tokenhash) {
+	print STDERR "CPP TOKEN $token -> ".$tokenhash{$token}."\n";
+	print STDERR "              ARGS: ".$arghash{$token}."\n";
+    }
 }
 
 

@@ -17,7 +17,7 @@ $589|/*!
         @constant       kDRBlockSizeMode2Form2Data      Mode 2 Form 2 data.
         @constant       kDRBlockSizeDVDData                     DVD data.
 */
-$0|$15775|-=: TOP LEVEL COMMENT PARSE VALUES :=-
+$0|$15990|-=: TOP LEVEL COMMENT PARSE VALUES :=-
 inHeader: 0
 inClass: 0
 inInterface: 0
@@ -45,8 +45,11 @@ inputCounter: 0
 blockOffset: 0
 fullpath: /test_suite_bogus_path/nametest_26.test
 -=: BLOCKPARSE PARSER STATE KEYS :=-
+$parserState->{ASLBRACEPRECURSOR} => 
+$parserState->{ASLBRACEPRECURSORTAG} => 
 $parserState->{FULLPATH} => /test_suite_bogus_path/nametest_26.test
 $parserState->{NEXTTOKENNOCPP} => 0
+$parserState->{afterNL} => 2
 $parserState->{availability} => 
 $parserState->{backslashcount} => 0
 $parserState->{basetype} => enum
@@ -89,8 +92,10 @@ $parserState->{occmethod} => 0
 $parserState->{occmethodname} => 
 $parserState->{occparmlabelfound} => 1
 $parserState->{onlyComments} => 0
+$parserState->{parsedParamAtBrace} => ARRAY(OBJID)
 $parserState->{parsedParamList} => ARRAY(OBJID)
 $parserState->{parsedParamParse} => 1
+$parserState->{parsedParamStateAtBrace} => ARRAY(OBJID)
 $parserState->{posstypes} =>  enum
 $parserState->{posstypesPending} => 0
 $parserState->{pplStack} => ARRAY(OBJID)
@@ -616,7 +621,7 @@ END OF OBJECT
 
 
 
-$15775|-=: TOP LEVEL COMMENT PARSE VALUES :=-
+$15990|-=: TOP LEVEL COMMENT PARSE VALUES :=-
 inHeader: 0
 inClass: 0
 inInterface: 0
@@ -644,8 +649,11 @@ inputCounter: 0
 blockOffset: 0
 fullpath: /test_suite_bogus_path/nametest_26.test
 -=: BLOCKPARSE PARSER STATE KEYS :=-
+$parserState->{ASLBRACEPRECURSOR} => 
+$parserState->{ASLBRACEPRECURSORTAG} => 
 $parserState->{FULLPATH} => /test_suite_bogus_path/nametest_26.test
 $parserState->{NEXTTOKENNOCPP} => 0
+$parserState->{afterNL} => 2
 $parserState->{availability} => 
 $parserState->{backslashcount} => 0
 $parserState->{basetype} => enum
@@ -688,8 +696,10 @@ $parserState->{occmethod} => 0
 $parserState->{occmethodname} => 
 $parserState->{occparmlabelfound} => 1
 $parserState->{onlyComments} => 0
+$parserState->{parsedParamAtBrace} => ARRAY(OBJID)
 $parserState->{parsedParamList} => ARRAY(OBJID)
 $parserState->{parsedParamParse} => 1
+$parserState->{parsedParamStateAtBrace} => ARRAY(OBJID)
 $parserState->{posstypes} =>  enum
 $parserState->{posstypesPending} => 0
 $parserState->{pplStack} => ARRAY(OBJID)

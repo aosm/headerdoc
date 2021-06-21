@@ -3,8 +3,8 @@
 ##
 
 
-bindir  = /usr/bin
-confdir = /Library/Preferences/
+bindir  = $(DEVELOPER_DIR)/usr/bin
+confdir = $(DEVELOPER_DIR)/usr/share/headerdoc/conf/
 conffile = com.apple.headerDoc2HTML.config
 templatefile = com.apple.headerdoc.exampletocteplate.html
 # docsDir = /Developer/Documentation/DeveloperTools
@@ -22,12 +22,13 @@ perl_libdir := $(subst Perl,Perl/Extras,$(perl_libdir))
 endif
 endif
 startperl   := $(shell perl -e 'require Config; print "$$Config::Config{'startperl'}\n";')
+testsuite_version := $(shell cat testsuite/version)
 
 all: all_internal test apidoc
 
 # Override the default compiler to GCC 4.0 if building for Snow Leopard internally.
 all_internal:
-	cd xmlman ; make all CC=`if [ "$$DEVELOPER_BIN_DIR" != "" -a "$(building_ppc)" != "0" ] ; then echo "gcc-4.0" ; else echo "cc"; fi` ARCH=`uname` VERS=`sw_vers -productVersion | sed 's/\([0-9][0-9]*\)\.\([0-9][0-9]*\)\..*/\1.\2/'` ; cd ..
+	cd xmlman ; make all CC=`if [ "$$DEVELOPER_BIN_DIR" != "" -a "$(building_ppc)" != "0" ] ; then echo "gcc-4.0" ; else echo "cc"; fi` ARCH=`uname` VERS=`{ echo "10.8"; sw_vers -productVersion | sed 's/\([0-9][0-9]*\)\.\([0-9][0-9]*\)\..*/\1.\2/'; } | sort | head -n 1` ; cd ..
 
 clean:
 	cd xmlman ; make clean ; cd ..
@@ -42,12 +43,17 @@ installhdrs:
 build:
 
 test:
+	rm -f /tmp/xref_out
+	rm -rf /tmp/hdtest_perm
+	rm -rf /tmp/hdtest_out
+
 	./headerDoc2HTML.pl -T run; \
 	if [ "$$?" -ne 0 ] ; then \
 		echo "Test suite failed."; \
 		exit 1; \
 	fi
 
+	rm -f /tmp/xref_out
 	rm -rf /tmp/hdtest_perm
 	rm -rf /tmp/hdtest_out
 	mkdir /tmp/hdtest_perm
@@ -73,6 +79,7 @@ test:
 
 realinstall: all_internal
 	DSTROOT="" make installsub
+	DSTROOT="" make installtests
 
 install: all_internal
 	@echo ; \
@@ -83,9 +90,12 @@ install: all_internal
 	echo "          $$DSTROOT" ; \
 	echo "" ; \
 	echo "This is primarily intended for building packages." ; \
-	echo "If you want to actually install over your" ; \
-	echo "existing installation, cancel this make and run" ; \
-	echo "\"sudo make realinstall\" instead." ; \
+	echo "If you want to actually install over an existing" ; \
+	echo "installation in /usr, cancel this make and run" ; \
+	echo "\"sudo make realinstall\" instead, or to update" ; \
+	echo "an installed copy of Xcode, set the DEVELOPER_DIR" ; \
+	echo "environment variable to, for example," ; \
+	echo "/Applications/Xcode.app/Contents/Developer/" ; \
  \
 	sleep 5 ; \
 	make installsub
@@ -94,9 +104,15 @@ installsub:
 
 	@echo "Destination is:  \"${DSTROOT}\""
 
-	umask 022 && install -d $(DSTROOT)$(perl_libdir)/HeaderDoc
-	install -c -m 444 Modules/HeaderDoc/*.pm $(DSTROOT)$(perl_libdir)/HeaderDoc
-	install -c -m 444 Modules/HeaderDoc/Availability.list $(DSTROOT)$(perl_libdir)/HeaderDoc
+	# umask 022 && install -d $(DSTROOT)$(perl_libdir)/HeaderDoc
+
+	# install -c -m 444 Modules/HeaderDoc/*.pm $(DSTROOT)$(perl_libdir)/HeaderDoc
+	mkdir -p $(DSTROOT)$(DEVELOPER_DIR)/usr/share/headerdoc/Modules/HeaderDoc
+	install -c -m 444 Modules/HeaderDoc/*.pm $(DSTROOT)$(DEVELOPER_DIR)/usr/share/headerdoc/Modules/HeaderDoc
+
+	# install -c -m 444 Modules/HeaderDoc/Availability.list $(DSTROOT)$(perl_libdir)/HeaderDoc
+	install -c -m 444 Modules/HeaderDoc/Availability.list $(DSTROOT)$(DEVELOPER_DIR)/usr/share/headerdoc
+
 	if [ -f "Modules/HeaderDoc/LinkResolver.pm" ] ; then \
 		rm -f $(DSTROOT)$(perl_libdir)/HeaderDoc/LinkResolver.pm ; \
 		umask 022 && install -d $(DSTROOT)/AppleInternal/Library/Perl/HeaderDoc ; \
@@ -108,7 +124,7 @@ installsub:
 	umask 022 && install -d $(DSTROOT)$(bindir)
 	umask 022 && install -d $(DSTROOT)$(confdir)
 	install -c -m 755 headerDoc2HTML.config-xcodecolors $(DSTROOT)$(confdir)$(conffile)
-	install -c -m 444 exampletoctemplate.html $(DSTROOT)$(confdir)$(templatefile)
+	install -c -m 444 $(templatefile) $(DSTROOT)$(confdir)$(templatefile)
 	if [ "$(SYMROOT)" != "" ] ; then \
 		install -c -m 755 xmlman/xml2man $(SYMROOT)$(bindir)/xml2man; \
 		dsymutil -o $(SYMROOT)$(bindir)/xml2man.dSYM $(SYMROOT)$(bindir)/xml2man; \
@@ -122,6 +138,7 @@ installsub:
 	install -s -c -m 755 xmlman/resolveLinks $(DSTROOT)$(bindir)/resolveLinks
 	install -c -m 755 headerDoc2HTML.pl $(DSTROOT)$(bindir)/$(program1)
 	perl -i -pe 's|^#!/usr/bin/perl.*$$|$(startperl)|;' $(DSTROOT)$(bindir)/$(program1)
+	perl -i -pe 's|^\$$HeaderDoc::testsuite_version="\d+";|\$$HeaderDoc::testsuite_version="$(testsuite_version)";|;' $(DSTROOT)$(bindir)/$(program1)
 	chmod 555 $(DSTROOT)$(bindir)/$(program1)
 	umask 022 && install -d $(DSTROOT)$(bindir)
 	install -c -m 755 gatherHeaderDoc.pl $(DSTROOT)$(bindir)/$(program2)
@@ -129,43 +146,46 @@ installsub:
 	chmod 555 $(DSTROOT)$(bindir)/$(program2)
 	# umask 022 && install -d $(DSTROOT)$(docsDir)/HeaderDoc
 	# install -c -m 444 Documentation/*.html $(DSTROOT)$(docsDir)/HeaderDoc
-	umask 022 && install -d $(DSTROOT)/usr/share/man/man1
-	install -c -m 444 Documentation/man/*.1 $(DSTROOT)/usr/share/man/man1
-	umask 022 && install -d $(DSTROOT)/usr/share/man/man5
-	install -c -m 444 Documentation/man/*.5 $(DSTROOT)/usr/share/man/man5
+	umask 022 && install -d $(DSTROOT)$(DEVELOPER_DIR)/usr/share/man/man1
+	install -c -m 444 Documentation/man/*.1 $(DSTROOT)$(DEVELOPER_DIR)/usr/share/man/man1
+	umask 022 && install -d $(DSTROOT)$(DEVELOPER_DIR)/usr/share/man/man5
+	# install -c -m 444 Documentation/man/*.5 $(DSTROOT)$(DEVELOPER_DIR)/usr/share/man/man5
 	cd xmlman ; make clean ; cd ..
 
+installtests:
 	# Install test suite
-	umask 022 && install -d $(DSTROOT)/usr/share/headerdoc/testsuite
-	umask 022 && install -d $(DSTROOT)/usr/share/headerdoc/testsuite/parser_tests
-	umask 022 && install -d $(DSTROOT)/usr/share/headerdoc/testsuite/resolvelinks
-	umask 022 && install -d $(DSTROOT)/usr/share/headerdoc/testsuite/resolvelinks/sourcefiles
-	umask 022 && install -d $(DSTROOT)/usr/share/headerdoc/testsuite/resolvelinks/tests
-	umask 022 && install -d $(DSTROOT)/usr/share/headerdoc/testsuite/c_preprocessor_tests
-	install -c -m 444 testsuite/parser_tests/*.test $(DSTROOT)/usr/share/headerdoc/testsuite/parser_tests
+	umask 022 && install -d $(DSTROOT)$(DEVELOPER_DIR)/usr/share/headerdoc/testsuite
+	umask 022 && install -d $(DSTROOT)$(DEVELOPER_DIR)/usr/share/headerdoc/testsuite/parser_tests
+	umask 022 && install -d $(DSTROOT)$(DEVELOPER_DIR)/usr/share/headerdoc/testsuite/resolvelinks
+	umask 022 && install -d $(DSTROOT)$(DEVELOPER_DIR)/usr/share/headerdoc/testsuite/resolvelinks/sourcefiles
+	umask 022 && install -d $(DSTROOT)$(DEVELOPER_DIR)/usr/share/headerdoc/testsuite/resolvelinks/tests
+	umask 022 && install -d $(DSTROOT)$(DEVELOPER_DIR)/usr/share/headerdoc/testsuite/c_preprocessor_tests
+	install -c -m 444 testsuite/parser_tests/*.test $(DSTROOT)$(DEVELOPER_DIR)/usr/share/headerdoc/testsuite/parser_tests
+
+	install -c -m 755 testsuite/version $(DSTROOT)$(DEVELOPER_DIR)/usr/share/headerdoc/testsuite
 
 	# Install resolvelinks test tools
-	install -c -m 755 testsuite/resolvelinks/update.sh $(DSTROOT)/usr/share/headerdoc/testsuite/resolvelinks
-	install -c -m 755 testsuite/resolvelinks/runtests.sh $(DSTROOT)/usr/share/headerdoc/testsuite/resolvelinks
+	install -c -m 755 testsuite/resolvelinks/update.sh $(DSTROOT)$(DEVELOPER_DIR)/usr/share/headerdoc/testsuite/resolvelinks
+	install -c -m 755 testsuite/resolvelinks/runtests.sh $(DSTROOT)$(DEVELOPER_DIR)/usr/share/headerdoc/testsuite/resolvelinks
 
 	# Make resolvelinks test source directories
-	find testsuite/resolvelinks/sourcefiles -type d -and \! -path '*/CVS/*' -and \! -path '*/CVS' -exec install -m 755 -d -c {} $(DSTROOT)/usr/share/headerdoc/{} \;
+	find testsuite/resolvelinks/sourcefiles -type d -and \! -path '*/CVS/*' -and \! -path '*/CVS' -exec install -m 755 -d -c {} $(DSTROOT)$(DEVELOPER_DIR)/usr/share/headerdoc/{} \;
 	# Copy resolvelinks test sources
-	find testsuite/resolvelinks/sourcefiles \! -type d -and \! -path '*/CVS/*' -and \! -path '*/CVS' -exec install -m 444 -c {} $(DSTROOT)/usr/share/headerdoc/{} \;
+	find testsuite/resolvelinks/sourcefiles \! -type d -and \! -path '*/CVS/*' -and \! -path '*/CVS' -exec install -m 444 -c {} $(DSTROOT)$(DEVELOPER_DIR)/usr/share/headerdoc/{} \;
 
 	# Make resolvelinks test expected result directories
-	find testsuite/resolvelinks/tests -type d \! -path '*/CVS/*' -and \! -path '*/CVS' -exec install -m 755 -d -c {} $(DSTROOT)/usr/share/headerdoc/{} \;
+	find testsuite/resolvelinks/tests -type d \! -path '*/CVS/*' -and \! -path '*/CVS' -exec install -m 755 -d -c {} $(DSTROOT)$(DEVELOPER_DIR)/usr/share/headerdoc/{} \;
 
 	# Copy resolvelinks test expected results
-	find testsuite/resolvelinks/tests \! -type d -and \! -path '*/CVS/*' -and \! -path '*/CVS' -exec install -m 444 -c {} $(DSTROOT)/usr/share/headerdoc/{} \;
+	find testsuite/resolvelinks/tests \! -type d -and \! -path '*/CVS/*' -and \! -path '*/CVS' -exec install -m 444 -c {} $(DSTROOT)$(DEVELOPER_DIR)/usr/share/headerdoc/{} \;
 
 
-	install -c -m 444 testsuite/c_preprocessor_tests/*.test $(DSTROOT)/usr/share/headerdoc/testsuite/c_preprocessor_tests
+	install -c -m 444 testsuite/c_preprocessor_tests/*.test $(DSTROOT)$(DEVELOPER_DIR)/usr/share/headerdoc/testsuite/c_preprocessor_tests
 
-	# Install copies everywhere else
-	if [ -f "/usr/local/versioner/perl/versions" ] ; then \
-		./installmulti.sh "$(DSTROOT)"; \
-	fi
+	## # Install copies everywhere else
+	## if [ -f "/usr/local/versioner/perl/versions" ] ; then \
+		## ./installmulti.sh "$(DSTROOT)"; \
+	## fi
 
 apidoc:
 	./generateAPIDocs.sh

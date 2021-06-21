@@ -3,7 +3,7 @@
 # Class name: Test
 # Synopsis: Test Harness
 #
-# Last Updated: $Date: 2011/05/19 13:01:25 $
+# Last Updated: $Date: 2014/02/26 11:18:59 $
 #
 # Copyright (c) 2008 Apple Computer, Inc.  All rights reserved.
 #
@@ -143,7 +143,6 @@ use File::Basename;
 use strict;
 use vars qw($VERSION @ISA);
 use Cwd;
-use POSIX qw(strftime mktime localtime);
 use Carp qw(cluck);
 use HeaderDoc::Utilities qw(processTopLevel);
 use HeaderDoc::BlockParse qw(blockParseOutside blockParse getAndClearCPPHash);
@@ -161,7 +160,7 @@ if ($HeaderDoc::FreezeThaw_available) {
 #         In the git repository, contains the number of seconds since
 #         January 1, 1970.
 #  */
-$HeaderDoc::Test::VERSION = '$Revision: 1305835285 $';
+$HeaderDoc::Test::VERSION = '$Revision: 1393442339 $';
 
 # /*!
 #     @abstract
@@ -330,12 +329,19 @@ sub runtest_sub {
     $HeaderDoc::enableParanoidWarnings = 0;
     $HeaderDoc::outerNamesOnly = 0;
     $HeaderDoc::AccessControlState = "";
+
+    $HeaderDoc::OptionalOrRequired = "";
+
     $HeaderDoc::idl_language = "idl";
     %HeaderDoc::availability_defs = ();
     %HeaderDoc::availability_has_args = ();
 
     # warn "MP: ".$HeaderDoc::modulesPath."Availability.list\n";
-    getAvailabilityMacros($HeaderDoc::modulesPath."Availability.list", 1);
+    if ( -f $HeaderDoc::modulesPath."../../Availability.list") {
+	getAvailabilityMacros($HeaderDoc::modulesPath."../../Availability.list", 1);
+    } else {
+	getAvailabilityMacros($HeaderDoc::modulesPath."Availability.list", 1);
+    }
 
     my $basefilename = basename($self->{FILENAME});
     my $coretestfail = 0;
@@ -368,6 +374,7 @@ sub runtest_sub {
 
     $HeaderDoc::lang = $self->{LANG};
     $HeaderDoc::sublang = $self->{SUBLANG};
+
     my $apiOwner = HeaderDoc::Header->new("LANG" => $self->{LANG}, "SUBLANG" => $self->{SUBLANG});
     $apiOwner->apiOwner($apiOwner);
     my $headerObject = $apiOwner;
@@ -557,6 +564,9 @@ print STDERR "ITEM NOW $item\n" if ($localDebug);
 	my $objcAccessControlState = "private:"; # the default in Objective C
 	my $functionGroup = "default_function_group";
 
+	if ($HeaderDoc::sublang eq "IDL") {
+		$cppAccessControlState = "public:"; # IDLs have no notion of protection, typically.
+	}
 
 	my @codeLines = split(/\n/, $self->{CODE});
 	map(s/$/\n/gm, @codeLines);
@@ -608,7 +618,7 @@ print STDERR "ITEM NOW $item\n" if ($localDebug);
 	$results .= "-=: BLOCKPARSE PARSER STATE KEYS :=-\n";
 	my @pskeys = sort keys %{$parserState};
 	foreach my $key (@pskeys) {
-		if ($key !~ /(pplStack|hollow|lastTreeNode|freezeStack|parsedParamList|braceStack|treeStack|endOfTripleQuoteToken|rollbackState|availabilityNodesArray)/) {
+		if ($key !~ /(pplStack|hollow|lastDisplayNode|lastTreeNode|freezeStack|parsedParamList|braceStack|treeStack|endOfTripleQuoteToken|rollbackState|availabilityNodesArray|parsedParamAtBrace|parsedParamStateAtBrace)/) {
 			$results .= "\$parserState->{$key} => ".$parserState->{$key}."\n";
 		} else {
 			my $temp = $parserState->{$key};
@@ -756,6 +766,9 @@ print STDERR "ITEM NOW $item\n" if ($localDebug);
 		    }
 		}
 
+		$headerObject->fixupTypeRequests();
+		$headerObject->setupAPIReferences();
+
 		$results .= "-=: FOUND MATCH :=-\n";
 		$results .= $foundMatch."\n";
 		$results .= "-=: NAMED OBJECTS :=-\n";
@@ -897,6 +910,46 @@ sub writeToFile {
 
     print WRITEFILE $string;
     close(WRITEFILE);
+}
+
+# /*!
+#     @abstract
+#         Writes tests to a property list file.  Currently
+#         disabled.
+#  */
+sub writeToPlist {
+    my $self = shift;
+    my $filename = shift;
+
+	# print "SELF: $self\n";
+
+    eval {
+	require Data::Plist::XMLWriter;
+    };
+
+return; # for now.
+
+    if ($@) {
+	warn("Not writing property lists because you do not have Data::Plist.\nTo install it, type:\n    sudo cpan YAML\n    sudo cpan Data::Plist::XMLWriter\n");
+	return;
+    }
+
+    $filename =~ s/\.test$/\.plist/g;
+
+    # my $plist = Data::Plist->new($self);
+
+    my $writer = Data::Plist::XMLWriter->new;
+
+    my %selfhash = %{$self};
+    # foreach my $key (keys %selfhash) {
+	# print STDERR "DATA $key -> ".$selfhash{$key}."\n";
+    # }
+
+    my $str = $writer->write(\%selfhash);
+    open(WRITEFILE, ">$filename") or die("Could not write file \"$filename\"\n");
+    print WRITEFILE $str;
+    close(WRITEFILE);
+
 }
 
 # sub dbprint_expanded
@@ -1073,7 +1126,7 @@ sub showresults_sub
 				print WRITEFILE $got_parts{$key};
 				close(WRITEFILE);
 
-				system("/usr/bin/diff -u /tmp/headerdoc-diff-expected /tmp/headerdoc-diff-got");
+				system("/usr/bin/diff -u -U 15 /tmp/headerdoc-diff-expected /tmp/headerdoc-diff-got");
 
 				unlink("/tmp/headerdoc-diff-expected");
 				unlink("/tmp/headerdoc-diff-got");
@@ -1512,6 +1565,11 @@ sub dumpObjNames
 			foreach my $copyobj (@newtrees) {
 				push(@parseTrees, $copyobj);
 			}
+			($newret, @newtrees) = $self->dumpEmbeddedClasses($obj, $nest + 1);
+			$retstring .= $newret;
+			foreach my $copyobj (@newtrees) {
+				push(@parseTrees, $copyobj);
+			}
 		}
 	}
 	if (@methods) {
@@ -1614,6 +1672,7 @@ sub dumpObjNames
 		}
 	}
     } else {
+
 	my @objects = $obj->parsedParameters();
 	if (@objects) {
 		$retstring .= $indent."PARSED PARAMETERS:\n";
@@ -1662,8 +1721,63 @@ sub dumpObjNames
 			}
 		}
 	}
+
+	my ($newret, @newtrees) = $self->dumpEmbeddedClasses($obj, $nest + 1);
+	$retstring .= $newret;
+	foreach my $copyobj (@newtrees) {
+		push(@parseTrees, $copyobj);
+	}
     }
 
+    return ($retstring, @parseTrees);
+}
+
+
+# /*!
+#     @abstract Dumps information about AppleScript scripts embedded
+#               within handlers.
+#  */
+sub dumpEmbeddedClasses
+{
+    my $self = shift;
+    my $obj = shift;
+    my $nest = shift;
+
+    my $class = ref($obj) || $obj;
+
+    my $retstring = "";
+    my @parseTrees = ();
+    my @embeddedClasses = ();
+
+    if ($self->{LANG} eq "applescript" && $class eq "HeaderDoc::Function") {
+	my $class_self = undef;
+	if (!$obj->{ASCONTENTSPROCESSED}) {
+		$class_self = $obj->processAppleScriptFunctionContents();
+	} else {
+		my $class_self_ref = $obj->{AS_CLASS_SELF};
+		if ($class_self_ref) {
+			$class_self = ${$class_self_ref};
+			bless($class_self, "HeaderDoc::HeaderElement");
+			bless($class_self, $class_self->class());
+		}
+	}
+	if ($class_self) {
+		my @tempClasses = $class_self->classes();
+		foreach my $obj (@tempClasses) {
+			push(@embeddedClasses, $obj);
+		}
+	}
+    }
+
+    if (@embeddedClasses) {
+	foreach my $obj (@embeddedClasses) {
+		my ($newret, @newtrees) = $self->dumpObjNames($obj, $nest + 1);
+		$retstring .= $newret;
+		foreach my $copyobj (@newtrees) {
+			push(@parseTrees, $copyobj);
+		}
+	}
+    }
     return ($retstring, @parseTrees);
 }
 

@@ -1,5 +1,5 @@
 FrT;@1|>>0|$15|HeaderDoc::Test%22|$4|CODE$7|COMMENT$7|CPPCODE$15|EXPECTED_RESULT$23|EXPECTED_RESULT_ALLDECS$7|FAILMSG$8|FILENAME$4|LANG$4|NAME$7|SUBLANG$4|TYPE_$30|/*! @language embedded-c++ */
-$0|$3825|-=: TOP LEVEL COMMENT PARSE VALUES :=-
+$0|$4040|-=: TOP LEVEL COMMENT PARSE VALUES :=-
 inHeader: 0
 inClass: 0
 inInterface: 0
@@ -27,8 +27,11 @@ inputCounter: 0
 blockOffset: 0
 fullpath: /test_suite_bogus_path/language_test_1.test
 -=: BLOCKPARSE PARSER STATE KEYS :=-
+$parserState->{ASLBRACEPRECURSOR} => 
+$parserState->{ASLBRACEPRECURSORTAG} => 
 $parserState->{FULLPATH} => /test_suite_bogus_path/language_test_1.test
 $parserState->{NEXTTOKENNOCPP} => 0
+$parserState->{afterNL} => 2
 $parserState->{availability} => 
 $parserState->{backslashcount} => 0
 $parserState->{basetype} => 
@@ -67,8 +70,10 @@ $parserState->{noInsert} => 0
 $parserState->{occmethod} => 0
 $parserState->{occmethodname} => 
 $parserState->{onlyComments} => 1
+$parserState->{parsedParamAtBrace} => ARRAY(OBJID)
 $parserState->{parsedParamList} => ARRAY(OBJID)
 $parserState->{parsedParamParse} => 0
+$parserState->{parsedParamStateAtBrace} => ARRAY(OBJID)
 $parserState->{posstypes} => 
 $parserState->{posstypesPending} => 1
 $parserState->{pplStack} => ARRAY(OBJID)
@@ -159,7 +164,7 @@ LONG ATTRIBUTES:
 
 -=: HTML OUTPUT OF PARSE TREES :=-
 
-$3825|-=: TOP LEVEL COMMENT PARSE VALUES :=-
+$4040|-=: TOP LEVEL COMMENT PARSE VALUES :=-
 inHeader: 0
 inClass: 0
 inInterface: 0
@@ -187,8 +192,11 @@ inputCounter: 0
 blockOffset: 0
 fullpath: /test_suite_bogus_path/language_test_1.test
 -=: BLOCKPARSE PARSER STATE KEYS :=-
+$parserState->{ASLBRACEPRECURSOR} => 
+$parserState->{ASLBRACEPRECURSORTAG} => 
 $parserState->{FULLPATH} => /test_suite_bogus_path/language_test_1.test
 $parserState->{NEXTTOKENNOCPP} => 0
+$parserState->{afterNL} => 2
 $parserState->{availability} => 
 $parserState->{backslashcount} => 0
 $parserState->{basetype} => 
@@ -227,8 +235,10 @@ $parserState->{noInsert} => 0
 $parserState->{occmethod} => 0
 $parserState->{occmethodname} => 
 $parserState->{onlyComments} => 1
+$parserState->{parsedParamAtBrace} => ARRAY(OBJID)
 $parserState->{parsedParamList} => ARRAY(OBJID)
 $parserState->{parsedParamParse} => 0
+$parserState->{parsedParamStateAtBrace} => ARRAY(OBJID)
 $parserState->{posstypes} => 
 $parserState->{posstypesPending} => 1
 $parserState->{pplStack} => ARRAY(OBJID)

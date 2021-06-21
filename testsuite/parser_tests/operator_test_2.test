@@ -148,7 +148,7 @@ bool
 
 };
 $13|/*! class */
-$0|$128772|-=: TOP LEVEL COMMENT PARSE VALUES :=-
+$0|$129114|-=: TOP LEVEL COMMENT PARSE VALUES :=-
 inHeader: 0
 inClass: 0
 inInterface: 0
@@ -176,9 +176,12 @@ inputCounter: 0
 blockOffset: 0
 fullpath: /test_suite_bogus_path/operator_test_2.test
 -=: BLOCKPARSE PARSER STATE KEYS :=-
+$parserState->{ASLBRACEPRECURSOR} => 
+$parserState->{ASLBRACEPRECURSORTAG} => 
 $parserState->{FULLPATH} => /test_suite_bogus_path/operator_test_2.test
 $parserState->{ISFORWARDDECLARATION} => 0
 $parserState->{NEXTTOKENNOCPP} => 0
+$parserState->{afterNL} => 2
 $parserState->{availability} => 
 $parserState->{backslashcount} => 0
 $parserState->{basetype} => 
@@ -221,8 +224,10 @@ $parserState->{occmethod} => 0
 $parserState->{occmethodname} => 
 $parserState->{occparmlabelfound} => 2
 $parserState->{onlyComments} => 0
+$parserState->{parsedParamAtBrace} => ARRAY(OBJID)
 $parserState->{parsedParamList} => ARRAY(OBJID)
 $parserState->{parsedParamParse} => 1
+$parserState->{parsedParamStateAtBrace} => ARRAY(OBJID)
 $parserState->{posstypes} => 
 $parserState->{posstypesPending} => 0
 $parserState->{pplStack} => ARRAY(OBJID)
@@ -738,7 +743,7 @@ LONG ATTRIBUTES:
     IS BLOCK: 
     OBJECT TYPE: HeaderDoc::CPPClass
     NAME: operator_test_class
-    APIUID: 
+    APIUID: //test_ref/cpp/cl/operator_test_class
     ABSTRACT: ""
     DISCUSSION: "<p>class "
     UPDATED: ""
@@ -793,7 +798,7 @@ LONG ATTRIBUTES:
         XMLTHROWS: ""
         UPDATED: ""
         LINKAGESTATE: ""
-        ACCESSCONTROL: ""
+        ACCESSCONTROL: "protected"
         AVAILABILITY: ""
         LINKUID: ""
         ORIGCLASS: ""
@@ -836,7 +841,7 @@ LONG ATTRIBUTES:
         XMLTHROWS: ""
         UPDATED: ""
         LINKAGESTATE: ""
-        ACCESSCONTROL: ""
+        ACCESSCONTROL: "protected"
         AVAILABILITY: ""
         LINKUID: ""
         ORIGCLASS: ""
@@ -965,7 +970,7 @@ LONG ATTRIBUTES:
         XMLTHROWS: ""
         UPDATED: ""
         LINKAGESTATE: ""
-        ACCESSCONTROL: ""
+        ACCESSCONTROL: "protected"
         AVAILABILITY: ""
         LINKUID: ""
         ORIGCLASS: ""
@@ -1094,7 +1099,7 @@ LONG ATTRIBUTES:
         XMLTHROWS: ""
         UPDATED: ""
         LINKAGESTATE: ""
-        ACCESSCONTROL: ""
+        ACCESSCONTROL: "protected"
         AVAILABILITY: ""
         LINKUID: ""
         ORIGCLASS: ""
@@ -1223,7 +1228,7 @@ LONG ATTRIBUTES:
         XMLTHROWS: ""
         UPDATED: ""
         LINKAGESTATE: ""
-        ACCESSCONTROL: ""
+        ACCESSCONTROL: "protected"
         AVAILABILITY: ""
         LINKUID: ""
         ORIGCLASS: ""
@@ -1352,7 +1357,7 @@ LONG ATTRIBUTES:
         XMLTHROWS: ""
         UPDATED: ""
         LINKAGESTATE: ""
-        ACCESSCONTROL: ""
+        ACCESSCONTROL: "protected"
         AVAILABILITY: ""
         LINKUID: ""
         ORIGCLASS: ""
@@ -1481,7 +1486,7 @@ LONG ATTRIBUTES:
         XMLTHROWS: ""
         UPDATED: ""
         LINKAGESTATE: ""
-        ACCESSCONTROL: ""
+        ACCESSCONTROL: "protected"
         AVAILABILITY: ""
         LINKUID: ""
         ORIGCLASS: ""
@@ -1610,7 +1615,7 @@ LONG ATTRIBUTES:
         XMLTHROWS: ""
         UPDATED: ""
         LINKAGESTATE: ""
-        ACCESSCONTROL: ""
+        ACCESSCONTROL: "protected"
         AVAILABILITY: ""
         LINKUID: ""
         ORIGCLASS: ""
@@ -1739,7 +1744,7 @@ LONG ATTRIBUTES:
         XMLTHROWS: ""
         UPDATED: ""
         LINKAGESTATE: ""
-        ACCESSCONTROL: ""
+        ACCESSCONTROL: "protected"
         AVAILABILITY: ""
         LINKUID: ""
         ORIGCLASS: ""
@@ -1868,7 +1873,7 @@ LONG ATTRIBUTES:
         XMLTHROWS: ""
         UPDATED: ""
         LINKAGESTATE: ""
-        ACCESSCONTROL: ""
+        ACCESSCONTROL: "protected"
         AVAILABILITY: ""
         LINKUID: ""
         ORIGCLASS: ""
@@ -1997,7 +2002,7 @@ LONG ATTRIBUTES:
         XMLTHROWS: ""
         UPDATED: ""
         LINKAGESTATE: ""
-        ACCESSCONTROL: ""
+        ACCESSCONTROL: "protected"
         AVAILABILITY: ""
         LINKUID: ""
         ORIGCLASS: ""
@@ -2124,7 +2129,7 @@ LONG ATTRIBUTES:
         XMLTHROWS: ""
         UPDATED: ""
         LINKAGESTATE: ""
-        ACCESSCONTROL: ""
+        ACCESSCONTROL: "protected"
         AVAILABILITY: ""
         LINKUID: ""
         ORIGCLASS: ""
@@ -5305,7 +5310,7 @@ OBJECT: operator_test_class (HeaderDoc::CPPClass)
 	@param  inOtherMessage  The message to compare.</span>
 	        <span class="comment">*/</span>
 	    <!-- a logicalPath="//test_ref/cpp/cl/bool //test_ref/cpp/tdef/bool //test_ref/cpp/tag/bool //test_ref/cpp/struct/bool //test_ref/cpp/intf/bool //test_ref/doc/anysymbol/bool" machineGenerated="true" --><span class="type">bool</span><!-- /a --> <span class="keyword">operator</span> &lt;&lt; ( 
-	        <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span>    <span class="comment">/*!
+	        <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span>   <span class="comment">/*!
 	@function       operator &gt;&gt;
 	@abstract       Inequality operator
 	@discussion     All message contents, including the parameters, are checked.
@@ -5313,7 +5318,7 @@ OBJECT: operator_test_class (HeaderDoc::CPPClass)
 	@param  inOtherMessage  The message to compare.</span>
 	        <span class="comment">*/</span>
 	    <!-- a logicalPath="//test_ref/cpp/cl/bool //test_ref/cpp/tdef/bool //test_ref/cpp/tag/bool //test_ref/cpp/struct/bool //test_ref/cpp/intf/bool //test_ref/doc/anysymbol/bool" machineGenerated="true" --><span class="type">bool</span><!-- /a --> <span class="keyword">operator</span> &gt;&gt; ( 
-	        <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span>   <span class="comment">/*!
+	        <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span>  <span class="comment">/*!
 	@constant foo</span>
 	        <span class="comment">*/</span>
 	    <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/int //test_ref/cpp/tdef/int //test_ref/cpp/tag/int //test_ref/cpp/struct/int //test_ref/cpp/intf/int //test_ref/doc/anysymbol/int" machineGenerated="true" --><span class="type">int</span><!-- /a --> <!-- a logicalPath="//test_ref/cpp/econst/foo //test_ref/cpp/data/foo //test_ref/cpp/clconst/foo " machineGenerated="true" --><span class="var">foo</span><!-- /a -->;  
@@ -5334,7 +5339,7 @@ OBJECT: operator_test_class (HeaderDoc::CPPClass)
 	@param  inOtherMessage  The message to compare.</span>
 	        <span class="comment">*/</span>
 	    <!-- a logicalPath="//test_ref/cpp/cl/bool //test_ref/cpp/tdef/bool //test_ref/cpp/tag/bool //test_ref/cpp/struct/bool //test_ref/cpp/intf/bool //test_ref/doc/anysymbol/bool" machineGenerated="true" --><span class="type">bool</span><!-- /a --> <span class="keyword">operator</span> != ( 
-	        <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span>    <span class="comment">/*!
+	        <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span>   <span class="comment">/*!
 	@function       operator +
 	@abstract       Addition operator
 	@discussion     All message contents, including the parameters, are checked.
@@ -5342,7 +5347,7 @@ OBJECT: operator_test_class (HeaderDoc::CPPClass)
 	@param  inOtherMessage  The message to compare.</span>
 	        <span class="comment">*/</span>
 	    <!-- a logicalPath="//test_ref/cpp/cl/bool //test_ref/cpp/tdef/bool //test_ref/cpp/tag/bool //test_ref/cpp/struct/bool //test_ref/cpp/intf/bool //test_ref/doc/anysymbol/bool" machineGenerated="true" --><span class="type">bool</span><!-- /a --> <span class="keyword">operator</span> +( 
-	        <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span>    <span class="comment">/*!
+	        <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span>   <span class="comment">/*!
 	@function       operator ++
 	@abstract       Increment operator
 	@discussion     All message contents, including the parameters, are checked.
@@ -5350,7 +5355,7 @@ OBJECT: operator_test_class (HeaderDoc::CPPClass)
 	@param  inOtherMessage  The message to compare.</span>
 	        <span class="comment">*/</span>
 	    <!-- a logicalPath="//test_ref/cpp/cl/bool //test_ref/cpp/tdef/bool //test_ref/cpp/tag/bool //test_ref/cpp/struct/bool //test_ref/cpp/intf/bool //test_ref/doc/anysymbol/bool" machineGenerated="true" --><span class="type">bool</span><!-- /a --> <span class="keyword">operator</span> ++( 
-	        <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span>    <span class="comment">/*!
+	        <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span>   <span class="comment">/*!
 	@function       operator -
 	@abstract       Subtraction operator
 	@discussion     All message contents, including the parameters, are checked.
@@ -5358,7 +5363,7 @@ OBJECT: operator_test_class (HeaderDoc::CPPClass)
 	@param  inOtherMessage  The message to compare.</span>
 	        <span class="comment">*/</span>
 	    <!-- a logicalPath="//test_ref/cpp/cl/bool //test_ref/cpp/tdef/bool //test_ref/cpp/tag/bool //test_ref/cpp/struct/bool //test_ref/cpp/intf/bool //test_ref/doc/anysymbol/bool" machineGenerated="true" --><span class="type">bool</span><!-- /a --> <span class="keyword">operator</span> -( 
-	        <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span>    <span class="comment">/*!
+	        <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span>   <span class="comment">/*!
 	@function       operator --
 	@abstract       Decrement operator
 	@discussion     All message contents, including the parameters, are checked.
@@ -5366,7 +5371,7 @@ OBJECT: operator_test_class (HeaderDoc::CPPClass)
 	@param  inOtherMessage  The message to compare.</span>
 	        <span class="comment">*/</span>
 	    <!-- a logicalPath="//test_ref/cpp/cl/bool //test_ref/cpp/tdef/bool //test_ref/cpp/tag/bool //test_ref/cpp/struct/bool //test_ref/cpp/intf/bool //test_ref/doc/anysymbol/bool" machineGenerated="true" --><span class="type">bool</span><!-- /a --> <span class="keyword">operator</span> --( 
-	        <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span>    <span class="comment">/*!
+	        <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span>   <span class="comment">/*!
 	@function       operator *
 	@abstract       Multiplication operator
 	@discussion     All message contents, including the parameters, are checked.
@@ -5374,7 +5379,7 @@ OBJECT: operator_test_class (HeaderDoc::CPPClass)
 	@param  inOtherMessage  The message to compare.</span>
 	        <span class="comment">*/</span>
 	    <!-- a logicalPath="//test_ref/cpp/cl/bool //test_ref/cpp/tdef/bool //test_ref/cpp/tag/bool //test_ref/cpp/struct/bool //test_ref/cpp/intf/bool //test_ref/doc/anysymbol/bool" machineGenerated="true" --><span class="type">bool</span><!-- /a --> <span class="keyword">operator</span> <span class="function">*</span>( 
-	        <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span>    <span class="comment">/*!
+	        <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span>   <span class="comment">/*!
 	@function       operator /
 	@abstract       Division operator
 	@discussion     All message contents, including the parameters, are checked.
@@ -5382,7 +5387,7 @@ OBJECT: operator_test_class (HeaderDoc::CPPClass)
 	@param  inOtherMessage  The message to compare.</span>
 	        <span class="comment">*/</span>
 	    <!-- a logicalPath="//test_ref/cpp/cl/bool //test_ref/cpp/tdef/bool //test_ref/cpp/tag/bool //test_ref/cpp/struct/bool //test_ref/cpp/intf/bool //test_ref/doc/anysymbol/bool" machineGenerated="true" --><span class="type">bool</span><!-- /a --> <span class="keyword">operator</span> /( 
-	        <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span>    
+	        <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span>   
 	};  
 END OF OBJECT
 
@@ -5394,13 +5399,13 @@ END OF OBJECT
 
 OBJECT: operator << (HeaderDoc::Function)
 	<!-- a logicalPath="//test_ref/cpp/cl/bool //test_ref/cpp/tdef/bool //test_ref/cpp/tag/bool //test_ref/cpp/struct/bool //test_ref/cpp/intf/bool //test_ref/doc/anysymbol/bool" machineGenerated="true" --><span class="type">bool</span><!-- /a --> <span class="keyword">operator</span> &lt;&lt; ( 
-	    <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span>  
+	    <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span> 
 END OF OBJECT
 
 
 OBJECT: operator >> (HeaderDoc::Function)
 	<!-- a logicalPath="//test_ref/cpp/cl/bool //test_ref/cpp/tdef/bool //test_ref/cpp/tag/bool //test_ref/cpp/struct/bool //test_ref/cpp/intf/bool //test_ref/doc/anysymbol/bool" machineGenerated="true" --><span class="type">bool</span><!-- /a --> <span class="keyword">operator</span> &gt;&gt; ( 
-	    <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span>  
+	    <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span> 
 END OF OBJECT
 
 
@@ -5412,43 +5417,43 @@ END OF OBJECT
 
 OBJECT: operator != (HeaderDoc::Function)
 	<!-- a logicalPath="//test_ref/cpp/cl/bool //test_ref/cpp/tdef/bool //test_ref/cpp/tag/bool //test_ref/cpp/struct/bool //test_ref/cpp/intf/bool //test_ref/doc/anysymbol/bool" machineGenerated="true" --><span class="type">bool</span><!-- /a --> <span class="keyword">operator</span> != ( 
-	    <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span>  
+	    <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span> 
 END OF OBJECT
 
 
 OBJECT: operator + (HeaderDoc::Function)
 	<!-- a logicalPath="//test_ref/cpp/cl/bool //test_ref/cpp/tdef/bool //test_ref/cpp/tag/bool //test_ref/cpp/struct/bool //test_ref/cpp/intf/bool //test_ref/doc/anysymbol/bool" machineGenerated="true" --><span class="type">bool</span><!-- /a --> <span class="keyword">operator</span> +( 
-	    <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span>  
+	    <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span> 
 END OF OBJECT
 
 
 OBJECT: operator ++ (HeaderDoc::Function)
 	<!-- a logicalPath="//test_ref/cpp/cl/bool //test_ref/cpp/tdef/bool //test_ref/cpp/tag/bool //test_ref/cpp/struct/bool //test_ref/cpp/intf/bool //test_ref/doc/anysymbol/bool" machineGenerated="true" --><span class="type">bool</span><!-- /a --> <span class="keyword">operator</span> ++( 
-	    <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span>  
+	    <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span> 
 END OF OBJECT
 
 
 OBJECT: operator - (HeaderDoc::Function)
 	<!-- a logicalPath="//test_ref/cpp/cl/bool //test_ref/cpp/tdef/bool //test_ref/cpp/tag/bool //test_ref/cpp/struct/bool //test_ref/cpp/intf/bool //test_ref/doc/anysymbol/bool" machineGenerated="true" --><span class="type">bool</span><!-- /a --> <span class="keyword">operator</span> -( 
-	    <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span>  
+	    <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span> 
 END OF OBJECT
 
 
 OBJECT: operator -- (HeaderDoc::Function)
 	<!-- a logicalPath="//test_ref/cpp/cl/bool //test_ref/cpp/tdef/bool //test_ref/cpp/tag/bool //test_ref/cpp/struct/bool //test_ref/cpp/intf/bool //test_ref/doc/anysymbol/bool" machineGenerated="true" --><span class="type">bool</span><!-- /a --> <span class="keyword">operator</span> --( 
-	    <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span>  
+	    <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span> 
 END OF OBJECT
 
 
 OBJECT: operator * (HeaderDoc::Function)
 	<!-- a logicalPath="//test_ref/cpp/cl/bool //test_ref/cpp/tdef/bool //test_ref/cpp/tag/bool //test_ref/cpp/struct/bool //test_ref/cpp/intf/bool //test_ref/doc/anysymbol/bool" machineGenerated="true" --><span class="type">bool</span><!-- /a --> <span class="keyword">operator</span> <span class="function">*</span>( 
-	    <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span>  
+	    <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span> 
 END OF OBJECT
 
 
 OBJECT: operator / (HeaderDoc::Function)
 	<!-- a logicalPath="//test_ref/cpp/cl/bool //test_ref/cpp/tdef/bool //test_ref/cpp/tag/bool //test_ref/cpp/struct/bool //test_ref/cpp/intf/bool //test_ref/doc/anysymbol/bool" machineGenerated="true" --><span class="type">bool</span><!-- /a --> <span class="keyword">operator</span> /( 
-	    <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span>  
+	    <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span> 
 END OF OBJECT
 
 
@@ -5458,7 +5463,7 @@ END OF OBJECT
 
 
 
-$128772|-=: TOP LEVEL COMMENT PARSE VALUES :=-
+$129114|-=: TOP LEVEL COMMENT PARSE VALUES :=-
 inHeader: 0
 inClass: 0
 inInterface: 0
@@ -5486,9 +5491,12 @@ inputCounter: 0
 blockOffset: 0
 fullpath: /test_suite_bogus_path/operator_test_2.test
 -=: BLOCKPARSE PARSER STATE KEYS :=-
+$parserState->{ASLBRACEPRECURSOR} => 
+$parserState->{ASLBRACEPRECURSORTAG} => 
 $parserState->{FULLPATH} => /test_suite_bogus_path/operator_test_2.test
 $parserState->{ISFORWARDDECLARATION} => 0
 $parserState->{NEXTTOKENNOCPP} => 0
+$parserState->{afterNL} => 2
 $parserState->{availability} => 
 $parserState->{backslashcount} => 0
 $parserState->{basetype} => 
@@ -5531,8 +5539,10 @@ $parserState->{occmethod} => 0
 $parserState->{occmethodname} => 
 $parserState->{occparmlabelfound} => 2
 $parserState->{onlyComments} => 0
+$parserState->{parsedParamAtBrace} => ARRAY(OBJID)
 $parserState->{parsedParamList} => ARRAY(OBJID)
 $parserState->{parsedParamParse} => 1
+$parserState->{parsedParamStateAtBrace} => ARRAY(OBJID)
 $parserState->{posstypes} => 
 $parserState->{posstypesPending} => 0
 $parserState->{pplStack} => ARRAY(OBJID)
@@ -6048,7 +6058,7 @@ LONG ATTRIBUTES:
     IS BLOCK: 
     OBJECT TYPE: HeaderDoc::CPPClass
     NAME: operator_test_class
-    APIUID: 
+    APIUID: //test_ref/cpp/cl/operator_test_class
     ABSTRACT: ""
     DISCUSSION: "<p>class "
     UPDATED: ""
@@ -6103,7 +6113,7 @@ LONG ATTRIBUTES:
         XMLTHROWS: ""
         UPDATED: ""
         LINKAGESTATE: ""
-        ACCESSCONTROL: ""
+        ACCESSCONTROL: "protected"
         AVAILABILITY: ""
         LINKUID: ""
         ORIGCLASS: ""
@@ -6146,7 +6156,7 @@ LONG ATTRIBUTES:
         XMLTHROWS: ""
         UPDATED: ""
         LINKAGESTATE: ""
-        ACCESSCONTROL: ""
+        ACCESSCONTROL: "protected"
         AVAILABILITY: ""
         LINKUID: ""
         ORIGCLASS: ""
@@ -6275,7 +6285,7 @@ LONG ATTRIBUTES:
         XMLTHROWS: ""
         UPDATED: ""
         LINKAGESTATE: ""
-        ACCESSCONTROL: ""
+        ACCESSCONTROL: "protected"
         AVAILABILITY: ""
         LINKUID: ""
         ORIGCLASS: ""
@@ -6404,7 +6414,7 @@ LONG ATTRIBUTES:
         XMLTHROWS: ""
         UPDATED: ""
         LINKAGESTATE: ""
-        ACCESSCONTROL: ""
+        ACCESSCONTROL: "protected"
         AVAILABILITY: ""
         LINKUID: ""
         ORIGCLASS: ""
@@ -6533,7 +6543,7 @@ LONG ATTRIBUTES:
         XMLTHROWS: ""
         UPDATED: ""
         LINKAGESTATE: ""
-        ACCESSCONTROL: ""
+        ACCESSCONTROL: "protected"
         AVAILABILITY: ""
         LINKUID: ""
         ORIGCLASS: ""
@@ -6662,7 +6672,7 @@ LONG ATTRIBUTES:
         XMLTHROWS: ""
         UPDATED: ""
         LINKAGESTATE: ""
-        ACCESSCONTROL: ""
+        ACCESSCONTROL: "protected"
         AVAILABILITY: ""
         LINKUID: ""
         ORIGCLASS: ""
@@ -6791,7 +6801,7 @@ LONG ATTRIBUTES:
         XMLTHROWS: ""
         UPDATED: ""
         LINKAGESTATE: ""
-        ACCESSCONTROL: ""
+        ACCESSCONTROL: "protected"
         AVAILABILITY: ""
         LINKUID: ""
         ORIGCLASS: ""
@@ -6920,7 +6930,7 @@ LONG ATTRIBUTES:
         XMLTHROWS: ""
         UPDATED: ""
         LINKAGESTATE: ""
-        ACCESSCONTROL: ""
+        ACCESSCONTROL: "protected"
         AVAILABILITY: ""
         LINKUID: ""
         ORIGCLASS: ""
@@ -7049,7 +7059,7 @@ LONG ATTRIBUTES:
         XMLTHROWS: ""
         UPDATED: ""
         LINKAGESTATE: ""
-        ACCESSCONTROL: ""
+        ACCESSCONTROL: "protected"
         AVAILABILITY: ""
         LINKUID: ""
         ORIGCLASS: ""
@@ -7178,7 +7188,7 @@ LONG ATTRIBUTES:
         XMLTHROWS: ""
         UPDATED: ""
         LINKAGESTATE: ""
-        ACCESSCONTROL: ""
+        ACCESSCONTROL: "protected"
         AVAILABILITY: ""
         LINKUID: ""
         ORIGCLASS: ""
@@ -7307,7 +7317,7 @@ LONG ATTRIBUTES:
         XMLTHROWS: ""
         UPDATED: ""
         LINKAGESTATE: ""
-        ACCESSCONTROL: ""
+        ACCESSCONTROL: "protected"
         AVAILABILITY: ""
         LINKUID: ""
         ORIGCLASS: ""
@@ -7434,7 +7444,7 @@ LONG ATTRIBUTES:
         XMLTHROWS: ""
         UPDATED: ""
         LINKAGESTATE: ""
-        ACCESSCONTROL: ""
+        ACCESSCONTROL: "protected"
         AVAILABILITY: ""
         LINKUID: ""
         ORIGCLASS: ""
@@ -10615,7 +10625,7 @@ OBJECT: operator_test_class (HeaderDoc::CPPClass)
 	@param  inOtherMessage  The message to compare.</span>
 	        <span class="comment">*/</span>
 	    <!-- a logicalPath="//test_ref/cpp/cl/bool //test_ref/cpp/tdef/bool //test_ref/cpp/tag/bool //test_ref/cpp/struct/bool //test_ref/cpp/intf/bool //test_ref/doc/anysymbol/bool" machineGenerated="true" --><span class="type">bool</span><!-- /a --> <span class="keyword">operator</span> &lt;&lt; ( 
-	        <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span>    <span class="comment">/*!
+	        <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span>   <span class="comment">/*!
 	@function       operator &gt;&gt;
 	@abstract       Inequality operator
 	@discussion     All message contents, including the parameters, are checked.
@@ -10623,7 +10633,7 @@ OBJECT: operator_test_class (HeaderDoc::CPPClass)
 	@param  inOtherMessage  The message to compare.</span>
 	        <span class="comment">*/</span>
 	    <!-- a logicalPath="//test_ref/cpp/cl/bool //test_ref/cpp/tdef/bool //test_ref/cpp/tag/bool //test_ref/cpp/struct/bool //test_ref/cpp/intf/bool //test_ref/doc/anysymbol/bool" machineGenerated="true" --><span class="type">bool</span><!-- /a --> <span class="keyword">operator</span> &gt;&gt; ( 
-	        <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span>   <span class="comment">/*!
+	        <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span>  <span class="comment">/*!
 	@constant foo</span>
 	        <span class="comment">*/</span>
 	    <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/int //test_ref/cpp/tdef/int //test_ref/cpp/tag/int //test_ref/cpp/struct/int //test_ref/cpp/intf/int //test_ref/doc/anysymbol/int" machineGenerated="true" --><span class="type">int</span><!-- /a --> <!-- a logicalPath="//test_ref/cpp/econst/foo //test_ref/cpp/data/foo //test_ref/cpp/clconst/foo " machineGenerated="true" --><span class="var">foo</span><!-- /a -->;  
@@ -10644,7 +10654,7 @@ OBJECT: operator_test_class (HeaderDoc::CPPClass)
 	@param  inOtherMessage  The message to compare.</span>
 	        <span class="comment">*/</span>
 	    <!-- a logicalPath="//test_ref/cpp/cl/bool //test_ref/cpp/tdef/bool //test_ref/cpp/tag/bool //test_ref/cpp/struct/bool //test_ref/cpp/intf/bool //test_ref/doc/anysymbol/bool" machineGenerated="true" --><span class="type">bool</span><!-- /a --> <span class="keyword">operator</span> != ( 
-	        <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span>    <span class="comment">/*!
+	        <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span>   <span class="comment">/*!
 	@function       operator +
 	@abstract       Addition operator
 	@discussion     All message contents, including the parameters, are checked.
@@ -10652,7 +10662,7 @@ OBJECT: operator_test_class (HeaderDoc::CPPClass)
 	@param  inOtherMessage  The message to compare.</span>
 	        <span class="comment">*/</span>
 	    <!-- a logicalPath="//test_ref/cpp/cl/bool //test_ref/cpp/tdef/bool //test_ref/cpp/tag/bool //test_ref/cpp/struct/bool //test_ref/cpp/intf/bool //test_ref/doc/anysymbol/bool" machineGenerated="true" --><span class="type">bool</span><!-- /a --> <span class="keyword">operator</span> +( 
-	        <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span>    <span class="comment">/*!
+	        <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span>   <span class="comment">/*!
 	@function       operator ++
 	@abstract       Increment operator
 	@discussion     All message contents, including the parameters, are checked.
@@ -10660,7 +10670,7 @@ OBJECT: operator_test_class (HeaderDoc::CPPClass)
 	@param  inOtherMessage  The message to compare.</span>
 	        <span class="comment">*/</span>
 	    <!-- a logicalPath="//test_ref/cpp/cl/bool //test_ref/cpp/tdef/bool //test_ref/cpp/tag/bool //test_ref/cpp/struct/bool //test_ref/cpp/intf/bool //test_ref/doc/anysymbol/bool" machineGenerated="true" --><span class="type">bool</span><!-- /a --> <span class="keyword">operator</span> ++( 
-	        <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span>    <span class="comment">/*!
+	        <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span>   <span class="comment">/*!
 	@function       operator -
 	@abstract       Subtraction operator
 	@discussion     All message contents, including the parameters, are checked.
@@ -10668,7 +10678,7 @@ OBJECT: operator_test_class (HeaderDoc::CPPClass)
 	@param  inOtherMessage  The message to compare.</span>
 	        <span class="comment">*/</span>
 	    <!-- a logicalPath="//test_ref/cpp/cl/bool //test_ref/cpp/tdef/bool //test_ref/cpp/tag/bool //test_ref/cpp/struct/bool //test_ref/cpp/intf/bool //test_ref/doc/anysymbol/bool" machineGenerated="true" --><span class="type">bool</span><!-- /a --> <span class="keyword">operator</span> -( 
-	        <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span>    <span class="comment">/*!
+	        <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span>   <span class="comment">/*!
 	@function       operator --
 	@abstract       Decrement operator
 	@discussion     All message contents, including the parameters, are checked.
@@ -10676,7 +10686,7 @@ OBJECT: operator_test_class (HeaderDoc::CPPClass)
 	@param  inOtherMessage  The message to compare.</span>
 	        <span class="comment">*/</span>
 	    <!-- a logicalPath="//test_ref/cpp/cl/bool //test_ref/cpp/tdef/bool //test_ref/cpp/tag/bool //test_ref/cpp/struct/bool //test_ref/cpp/intf/bool //test_ref/doc/anysymbol/bool" machineGenerated="true" --><span class="type">bool</span><!-- /a --> <span class="keyword">operator</span> --( 
-	        <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span>    <span class="comment">/*!
+	        <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span>   <span class="comment">/*!
 	@function       operator *
 	@abstract       Multiplication operator
 	@discussion     All message contents, including the parameters, are checked.
@@ -10684,7 +10694,7 @@ OBJECT: operator_test_class (HeaderDoc::CPPClass)
 	@param  inOtherMessage  The message to compare.</span>
 	        <span class="comment">*/</span>
 	    <!-- a logicalPath="//test_ref/cpp/cl/bool //test_ref/cpp/tdef/bool //test_ref/cpp/tag/bool //test_ref/cpp/struct/bool //test_ref/cpp/intf/bool //test_ref/doc/anysymbol/bool" machineGenerated="true" --><span class="type">bool</span><!-- /a --> <span class="keyword">operator</span> <span class="function">*</span>( 
-	        <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span>    <span class="comment">/*!
+	        <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span>   <span class="comment">/*!
 	@function       operator /
 	@abstract       Division operator
 	@discussion     All message contents, including the parameters, are checked.
@@ -10692,7 +10702,7 @@ OBJECT: operator_test_class (HeaderDoc::CPPClass)
 	@param  inOtherMessage  The message to compare.</span>
 	        <span class="comment">*/</span>
 	    <!-- a logicalPath="//test_ref/cpp/cl/bool //test_ref/cpp/tdef/bool //test_ref/cpp/tag/bool //test_ref/cpp/struct/bool //test_ref/cpp/intf/bool //test_ref/doc/anysymbol/bool" machineGenerated="true" --><span class="type">bool</span><!-- /a --> <span class="keyword">operator</span> /( 
-	        <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span>    
+	        <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span>   
 	};  
 END OF OBJECT
 
@@ -10704,13 +10714,13 @@ END OF OBJECT
 
 OBJECT: operator << (HeaderDoc::Function)
 	<!-- a logicalPath="//test_ref/cpp/cl/bool //test_ref/cpp/tdef/bool //test_ref/cpp/tag/bool //test_ref/cpp/struct/bool //test_ref/cpp/intf/bool //test_ref/doc/anysymbol/bool" machineGenerated="true" --><span class="type">bool</span><!-- /a --> <span class="keyword">operator</span> &lt;&lt; ( 
-	    <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span>  
+	    <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span> 
 END OF OBJECT
 
 
 OBJECT: operator >> (HeaderDoc::Function)
 	<!-- a logicalPath="//test_ref/cpp/cl/bool //test_ref/cpp/tdef/bool //test_ref/cpp/tag/bool //test_ref/cpp/struct/bool //test_ref/cpp/intf/bool //test_ref/doc/anysymbol/bool" machineGenerated="true" --><span class="type">bool</span><!-- /a --> <span class="keyword">operator</span> &gt;&gt; ( 
-	    <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span>  
+	    <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span> 
 END OF OBJECT
 
 
@@ -10722,43 +10732,43 @@ END OF OBJECT
 
 OBJECT: operator != (HeaderDoc::Function)
 	<!-- a logicalPath="//test_ref/cpp/cl/bool //test_ref/cpp/tdef/bool //test_ref/cpp/tag/bool //test_ref/cpp/struct/bool //test_ref/cpp/intf/bool //test_ref/doc/anysymbol/bool" machineGenerated="true" --><span class="type">bool</span><!-- /a --> <span class="keyword">operator</span> != ( 
-	    <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span>  
+	    <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span> 
 END OF OBJECT
 
 
 OBJECT: operator + (HeaderDoc::Function)
 	<!-- a logicalPath="//test_ref/cpp/cl/bool //test_ref/cpp/tdef/bool //test_ref/cpp/tag/bool //test_ref/cpp/struct/bool //test_ref/cpp/intf/bool //test_ref/doc/anysymbol/bool" machineGenerated="true" --><span class="type">bool</span><!-- /a --> <span class="keyword">operator</span> +( 
-	    <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span>  
+	    <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span> 
 END OF OBJECT
 
 
 OBJECT: operator ++ (HeaderDoc::Function)
 	<!-- a logicalPath="//test_ref/cpp/cl/bool //test_ref/cpp/tdef/bool //test_ref/cpp/tag/bool //test_ref/cpp/struct/bool //test_ref/cpp/intf/bool //test_ref/doc/anysymbol/bool" machineGenerated="true" --><span class="type">bool</span><!-- /a --> <span class="keyword">operator</span> ++( 
-	    <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span>  
+	    <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span> 
 END OF OBJECT
 
 
 OBJECT: operator - (HeaderDoc::Function)
 	<!-- a logicalPath="//test_ref/cpp/cl/bool //test_ref/cpp/tdef/bool //test_ref/cpp/tag/bool //test_ref/cpp/struct/bool //test_ref/cpp/intf/bool //test_ref/doc/anysymbol/bool" machineGenerated="true" --><span class="type">bool</span><!-- /a --> <span class="keyword">operator</span> -( 
-	    <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span>  
+	    <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span> 
 END OF OBJECT
 
 
 OBJECT: operator -- (HeaderDoc::Function)
 	<!-- a logicalPath="//test_ref/cpp/cl/bool //test_ref/cpp/tdef/bool //test_ref/cpp/tag/bool //test_ref/cpp/struct/bool //test_ref/cpp/intf/bool //test_ref/doc/anysymbol/bool" machineGenerated="true" --><span class="type">bool</span><!-- /a --> <span class="keyword">operator</span> --( 
-	    <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span>  
+	    <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span> 
 END OF OBJECT
 
 
 OBJECT: operator * (HeaderDoc::Function)
 	<!-- a logicalPath="//test_ref/cpp/cl/bool //test_ref/cpp/tdef/bool //test_ref/cpp/tag/bool //test_ref/cpp/struct/bool //test_ref/cpp/intf/bool //test_ref/doc/anysymbol/bool" machineGenerated="true" --><span class="type">bool</span><!-- /a --> <span class="keyword">operator</span> <span class="function">*</span>( 
-	    <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span>  
+	    <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span> 
 END OF OBJECT
 
 
 OBJECT: operator / (HeaderDoc::Function)
 	<!-- a logicalPath="//test_ref/cpp/cl/bool //test_ref/cpp/tdef/bool //test_ref/cpp/tag/bool //test_ref/cpp/struct/bool //test_ref/cpp/intf/bool //test_ref/doc/anysymbol/bool" machineGenerated="true" --><span class="type">bool</span><!-- /a --> <span class="keyword">operator</span> /( 
-	    <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span>  
+	    <span class="keyword">const</span> <!-- a logicalPath="//test_ref/cpp/cl/operator_test_class //test_ref/cpp/tdef/operator_test_class //test_ref/cpp/tag/operator_test_class //test_ref/cpp/struct/operator_test_class //test_ref/cpp/intf/operator_test_class //test_ref/doc/anysymbol/operator_test_class" machineGenerated="true" --><span class="type">operator_test_class</span><!-- /a --> &amp;<span class="param">inOtherMessage</span>) <span class="keyword">const</span> 
 END OF OBJECT
 
 

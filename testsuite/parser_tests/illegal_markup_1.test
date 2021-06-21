@@ -7,7 +7,7 @@ FrT;@1|>>0|$15|HeaderDoc::Test%22|$4|CODE$7|COMMENT$7|CPPCODE$15|EXPECTED_RESULT
 $65|/*! @category NSValue(MyAdditions)
     @abstract adds stuff.
  */
-$0|$7414|-=: TOP LEVEL COMMENT PARSE VALUES :=-
+$0|$7668|-=: TOP LEVEL COMMENT PARSE VALUES :=-
 inHeader: 0
 inClass: 1
 inInterface: 0
@@ -35,8 +35,11 @@ inputCounter: 0
 blockOffset: 0
 fullpath: /test_suite_bogus_path/illegal_markup_1.test
 -=: BLOCKPARSE PARSER STATE KEYS :=-
+$parserState->{ASLBRACEPRECURSOR} => 
+$parserState->{ASLBRACEPRECURSORTAG} => 
 $parserState->{FULLPATH} => /test_suite_bogus_path/illegal_markup_1.test
 $parserState->{NEXTTOKENNOCPP} => 0
+$parserState->{afterNL} => 2
 $parserState->{availability} => 
 $parserState->{backslashcount} => 0
 $parserState->{basetype} => 
@@ -77,8 +80,10 @@ $parserState->{occmethod} => 0
 $parserState->{occmethodname} => 
 $parserState->{occparmlabelfound} => 2
 $parserState->{onlyComments} => 0
+$parserState->{parsedParamAtBrace} => ARRAY(OBJID)
 $parserState->{parsedParamList} => ARRAY(OBJID)
 $parserState->{parsedParamParse} => 0
+$parserState->{parsedParamStateAtBrace} => ARRAY(OBJID)
 $parserState->{posstypes} => 
 $parserState->{posstypesPending} => 1
 $parserState->{pplStack} => ARRAY(OBJID)
@@ -173,7 +178,7 @@ LONG ATTRIBUTES:
     IS BLOCK: 
     OBJECT TYPE: HeaderDoc::ObjCCategory
     NAME: NSValue(MyAdditions)
-    APIUID: 
+    APIUID: //test_ref/occ/cat/NSValue(MyAdditions)
     ABSTRACT: "<p>adds stuff.
 "
     DISCUSSION: "<p></p>"
@@ -262,7 +267,7 @@ END OF OBJECT
 
 
 
-$11398|-=: TOP LEVEL COMMENT PARSE VALUES :=-
+$11659|-=: TOP LEVEL COMMENT PARSE VALUES :=-
 inHeader: 0
 inClass: 1
 inInterface: 0
@@ -290,8 +295,11 @@ inputCounter: 0
 blockOffset: 0
 fullpath: /test_suite_bogus_path/illegal_markup_1.test
 -=: BLOCKPARSE PARSER STATE KEYS :=-
+$parserState->{ASLBRACEPRECURSOR} => 
+$parserState->{ASLBRACEPRECURSORTAG} => 
 $parserState->{FULLPATH} => /test_suite_bogus_path/illegal_markup_1.test
 $parserState->{NEXTTOKENNOCPP} => 0
+$parserState->{afterNL} => 2
 $parserState->{availability} => 
 $parserState->{backslashcount} => 0
 $parserState->{basetype} => 
@@ -332,8 +340,10 @@ $parserState->{occmethod} => 0
 $parserState->{occmethodname} => 
 $parserState->{occparmlabelfound} => 2
 $parserState->{onlyComments} => 0
+$parserState->{parsedParamAtBrace} => ARRAY(OBJID)
 $parserState->{parsedParamList} => ARRAY(OBJID)
 $parserState->{parsedParamParse} => 0
+$parserState->{parsedParamStateAtBrace} => ARRAY(OBJID)
 $parserState->{posstypes} => 
 $parserState->{posstypesPending} => 1
 $parserState->{pplStack} => ARRAY(OBJID)
@@ -428,7 +438,7 @@ LONG ATTRIBUTES:
     IS BLOCK: 
     OBJECT TYPE: HeaderDoc::ObjCCategory
     NAME: NSValue(MyAdditions)
-    APIUID: 
+    APIUID: //test_ref/occ/cat/NSValue(MyAdditions)
     ABSTRACT: "<p>adds stuff.
 "
     DISCUSSION: "<p></p>"
@@ -487,7 +497,7 @@ LONG ATTRIBUTES:
         XMLTHROWS: ""
         UPDATED: ""
         LINKAGESTATE: ""
-        ACCESSCONTROL: ""
+        ACCESSCONTROL: "private"
         AVAILABILITY: ""
         LINKUID: ""
         ORIGCLASS: ""

@@ -930,7 +930,7 @@ $1723|/*!	@interface IOFireWireDeviceInterface
 	</ul>
 
 */
-$0|$1967065|-=: TOP LEVEL COMMENT PARSE VALUES :=-
+$0|$1967441|-=: TOP LEVEL COMMENT PARSE VALUES :=-
 inHeader: 0
 inClass: 1
 inInterface: 1
@@ -958,8 +958,11 @@ inputCounter: 0
 blockOffset: 0
 fullpath: /test_suite_bogus_path/COM_interface_1.test
 -=: BLOCKPARSE PARSER STATE KEYS :=-
+$parserState->{ASLBRACEPRECURSOR} => 
+$parserState->{ASLBRACEPRECURSORTAG} => 
 $parserState->{FULLPATH} => /test_suite_bogus_path/COM_interface_1.test
 $parserState->{NEXTTOKENNOCPP} => 0
+$parserState->{afterNL} => 2
 $parserState->{availability} => 
 $parserState->{backslashcount} => 0
 $parserState->{basetype} => struct
@@ -1005,8 +1008,10 @@ $parserState->{occmethod} => 0
 $parserState->{occmethodname} => 
 $parserState->{occparmlabelfound} => 3
 $parserState->{onlyComments} => 0
+$parserState->{parsedParamAtBrace} => ARRAY(OBJID)
 $parserState->{parsedParamList} => ARRAY(OBJID)
 $parserState->{parsedParamParse} => 1
+$parserState->{parsedParamStateAtBrace} => ARRAY(OBJID)
 $parserState->{posstypes} =>  typedef struct
 $parserState->{posstypesPending} => 0
 $parserState->{pplStack} => ARRAY(OBJID)
@@ -4825,7 +4830,7 @@ LONG ATTRIBUTES:
     IS BLOCK: 
     OBJECT TYPE: HeaderDoc::CPPClass
     NAME: IOFireWireDeviceInterface
-    APIUID: 
+    APIUID: //test_ref/c/cl/IOFireWireDeviceInterface
     ABSTRACT: "<p>IOFireWireDeviceInterface is your primary gateway to the functionality contained in
 IOFireWireLib.
 "
@@ -25588,7 +25593,7 @@ Pass the generation number to functions that take or return FireWire node IDs.
     IS BLOCK: 
     OBJECT TYPE: HeaderDoc::CPPClass
     NAME: IOFireWireUnitInterface
-    APIUID: 
+    APIUID: //test_ref/c/cl/IOFireWireUnitInterface
     ABSTRACT: "<p>IOFireWireDeviceInterface is your primary gateway to the functionality contained in
 IOFireWireLib.
 "
@@ -25666,7 +25671,7 @@ synchronous/asynchronous read, write and lock operations. These include:</p></li
     IS BLOCK: 
     OBJECT TYPE: HeaderDoc::CPPClass
     NAME: IOFireWireNubInterface
-    APIUID: 
+    APIUID: //test_ref/c/cl/IOFireWireNubInterface
     ABSTRACT: "<p>IOFireWireDeviceInterface is your primary gateway to the functionality contained in
 IOFireWireLib.
 "
@@ -25744,7 +25749,7 @@ synchronous/asynchronous read, write and lock operations. These include:</p></li
     IS BLOCK: 
     OBJECT TYPE: HeaderDoc::CPPClass
     NAME: IOFireWireDeviceInterface_t
-    APIUID: 
+    APIUID: //test_ref/c/cl/IOFireWireDeviceInterface_t
     ABSTRACT: "<p>IOFireWireDeviceInterface is your primary gateway to the functionality contained in
 IOFireWireLib.
 "
@@ -46721,7 +46726,7 @@ END OF OBJECT
 
 
 
-$1967065|-=: TOP LEVEL COMMENT PARSE VALUES :=-
+$1967441|-=: TOP LEVEL COMMENT PARSE VALUES :=-
 inHeader: 0
 inClass: 1
 inInterface: 1
@@ -46749,8 +46754,11 @@ inputCounter: 0
 blockOffset: 0
 fullpath: /test_suite_bogus_path/COM_interface_1.test
 -=: BLOCKPARSE PARSER STATE KEYS :=-
+$parserState->{ASLBRACEPRECURSOR} => 
+$parserState->{ASLBRACEPRECURSORTAG} => 
 $parserState->{FULLPATH} => /test_suite_bogus_path/COM_interface_1.test
 $parserState->{NEXTTOKENNOCPP} => 0
+$parserState->{afterNL} => 2
 $parserState->{availability} => 
 $parserState->{backslashcount} => 0
 $parserState->{basetype} => struct
@@ -46796,8 +46804,10 @@ $parserState->{occmethod} => 0
 $parserState->{occmethodname} => 
 $parserState->{occparmlabelfound} => 3
 $parserState->{onlyComments} => 0
+$parserState->{parsedParamAtBrace} => ARRAY(OBJID)
 $parserState->{parsedParamList} => ARRAY(OBJID)
 $parserState->{parsedParamParse} => 1
+$parserState->{parsedParamStateAtBrace} => ARRAY(OBJID)
 $parserState->{posstypes} =>  typedef struct
 $parserState->{posstypesPending} => 0
 $parserState->{pplStack} => ARRAY(OBJID)
@@ -50616,7 +50626,7 @@ LONG ATTRIBUTES:
     IS BLOCK: 
     OBJECT TYPE: HeaderDoc::CPPClass
     NAME: IOFireWireDeviceInterface
-    APIUID: 
+    APIUID: //test_ref/c/cl/IOFireWireDeviceInterface
     ABSTRACT: "<p>IOFireWireDeviceInterface is your primary gateway to the functionality contained in
 IOFireWireLib.
 "
@@ -71379,7 +71389,7 @@ Pass the generation number to functions that take or return FireWire node IDs.
     IS BLOCK: 
     OBJECT TYPE: HeaderDoc::CPPClass
     NAME: IOFireWireUnitInterface
-    APIUID: 
+    APIUID: //test_ref/c/cl/IOFireWireUnitInterface
     ABSTRACT: "<p>IOFireWireDeviceInterface is your primary gateway to the functionality contained in
 IOFireWireLib.
 "
@@ -71457,7 +71467,7 @@ synchronous/asynchronous read, write and lock operations. These include:</p></li
     IS BLOCK: 
     OBJECT TYPE: HeaderDoc::CPPClass
     NAME: IOFireWireNubInterface
-    APIUID: 
+    APIUID: //test_ref/c/cl/IOFireWireNubInterface
     ABSTRACT: "<p>IOFireWireDeviceInterface is your primary gateway to the functionality contained in
 IOFireWireLib.
 "
@@ -71535,7 +71545,7 @@ synchronous/asynchronous read, write and lock operations. These include:</p></li
     IS BLOCK: 
     OBJECT TYPE: HeaderDoc::CPPClass
     NAME: IOFireWireDeviceInterface_t
-    APIUID: 
+    APIUID: //test_ref/c/cl/IOFireWireDeviceInterface_t
     ABSTRACT: "<p>IOFireWireDeviceInterface is your primary gateway to the functionality contained in
 IOFireWireLib.
 "
@@ -92512,4 +92522,4 @@ END OF OBJECT
 
 
 
-_$43|testsuite/parser_tests/COM_interface_1.test$1|C$15|COM interface 1$1|C$6|parser
+_$97|/Users/dg/headerdoc-techpubs/Modules/HeaderDoc//../../testsuite/parser_tests/COM_interface_1.test$1|C$15|COM interface 1$1|C$6|parser

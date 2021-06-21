@@ -3,7 +3,7 @@
 # Module name: BlockParse
 # Synopsis: Block parser code
 #
-# Last Updated: $Date: 2011/05/19 13:01:25 $
+# Last Updated: $Date: 2014/03/05 14:20:14 $
 # 
 # Copyright (c) 1999-2004 Apple Computer, Inc.  All rights reserved.
 #
@@ -72,6 +72,12 @@
 #  */
 package HeaderDoc::BlockParse;
 
+# /*! @abstract
+#         Tells the block parser to include the function body
+#         in the parse tree.
+#  */
+$HeaderDoc::includeFunctionContents = 0;
+
 BEGIN {
 	foreach (qw(Mac::Files)) {
 	    $MOD_AVAIL{$_} = eval "use $_; 1";
@@ -85,13 +91,17 @@ foreach (qw(Mac::Files Mac::MoreFiles)) {
     eval "use $_";
 }
 
+
+# /*! @abstract Stores whether Objective-C protocol methods are optional or required. */
+$HeaderDoc::OptionalOrRequired = "";
+
 # $HeaderDoc::disable_parms = 0;
 
 @ISA = qw(Exporter);
-@EXPORT = qw(blockParse nspaces blockParseOutside getAndClearCPPHash cpp_remove buildCommentFromFields bracematching peekmatch cpp_add_cl);
+@EXPORT = qw(blockParse nspaces blockParseOutside getAndClearCPPHash cpp_remove buildCommentFromFields bracematching peekmatch cpp_add_cl pbs);
 @EXPORT_OK = qr(blockParseReturnState); # Used by Python parser.
 
-use HeaderDoc::Utilities qw(findRelativePath safeName printArray printHash parseTokens isKeyword warnHDComment classTypeFromFieldAndBPinfo casecmp addAvailabilityMacro printFields objectForUID peek);
+use HeaderDoc::Utilities qw(findRelativePath safeName printArray printHash parseTokens isKeyword warnHDComment classTypeFromFieldAndBPinfo casecmp addAvailabilityMacro printFields objectForUID peek isStandardAvailability);
 
 use HeaderDoc::HashObject;
 
@@ -112,7 +122,7 @@ use File::Basename qw(basename);
 #         In the git repository, contains the number of seconds since
 #         January 1, 1970.
 #  */
-$HeaderDoc::BlockParse::VERSION = '$Revision: 1305835285 $';
+$HeaderDoc::BlockParse::VERSION = '$Revision: 1394058014 $';
 
 ################ Portability ###################################
 my $isMacOS;
@@ -159,8 +169,12 @@ my %CPP_HASH = ();
 #  */
 my %CPP_ARG_HASH = ();
 
+# 0, 1, or 2.
 my $cppDebugDefault = 0;
 my $cppDebug = 0;
+
+my $cppAddDebug = 0;
+
 my $cppDebugFromToken = "";
 my $nestedcommentwarn = 0;
 my $warnAllMultipleDefinitions = 1;
@@ -352,6 +366,9 @@ sub bracematching
 		};
 	    ($tos eq "\@protocol") && do {
 			return "\@end";
+		};
+	    (($lang eq "applescript") && $tos =~ /(if|repeat|try|tell)/) && do {
+			return "end";
 		};
 	    (($lang eq "ruby") && $tos =~ /(for|while|if|until|begin)/) && do {
 			return "end";
@@ -571,6 +588,10 @@ sub bracematching
 #                 character.  (The value of <code>inComment</code> (in the
 #                 <code>parserState</code> object) goes to 0 before that code, so
 #                 without this, it would end up at the start of the next parameter.)
+#         @var asConcat
+#             In AppleScript parsing, set to 1 when a vertical pipe operator (|) is
+#             encountered to protect an identifier.  Set to 0 when the next vertical
+#             pipe operator is encountered.
 #
 #    @vargroup Parameter parsing
 #
@@ -616,6 +637,28 @@ sub bracematching
 #             to insert the parser state because it is one of the access control tokens (e.g.
 #             public/private) or because it isn't really being inserted into the tree.
 #
+#         @var pushParserStateAfterToken
+#             Normally 0.  Set to 1 if the parser state should be pushed onto the stack
+#             after this token.
+#
+#         @var pushParserStateAfterWordToken
+#             Normally 0.  Set to 1 if the parser state should be pushed onto the stack
+#             after the next word token.  May also be set to 2 if the parser state
+#             should be pushed at the word token after the next word token.
+#
+#         @var pushParserStateAtBrace
+#             Normally 0.  Set to 1 if the parser state should be pushed onto the stack
+#             after the next opening brace.
+#
+#         @var occPushParserStateOnWordTokenAfterNext
+#             Normally 0.  The name of this variable is slightly misleading.  When used,
+#             the variable is initially set to 2.  On the next word token (and only a word
+#             token), this variable is decremented to 1.
+#
+#             At this point, matching behavior changes, and the parser state is pushed
+#             at the first token that is either a word token, an at sign (\@), a
+#             minus sign (-), or a plus sign (+).
+#
 #    @vargroup Tree management
 #
 #         @var treeTop
@@ -639,6 +682,11 @@ sub bracematching
 #         @var treePopOnNewLine
 #             This indicates that the current position in the parse tree should be popped from
 #             the <code>treeStack</code> stack after the next newline character.
+#         @var trailingHide
+#             Indicates that this is a token that follows a state change to a new state in which
+#             the seenBraces flag was previously set, and that this token should be treated as
+#             though seenBraces were still set.  This flag is only supported in bits of code after
+#             where it is first set (in the right closing brace code).
 #
 #    @vargroup Parser stacks
 #
@@ -748,7 +796,7 @@ sub blockParse
     my $treeDebug               = 0;
     my $ilcDebug                = 0;
     my $regexpDebug             = 0; # 0, 1, 2
-    my $parserStackDebug        = 0 || $HeaderDoc::fileDebug;
+    my $parserStackDebug        = 0 || $HeaderDoc::fileDebug; # 0, 1, 2
     my $braceDebug              = 0 || $HeaderDoc::fileDebug;
     my $hangDebug               = 0;
     my $offsetDebug             = 0;
@@ -764,8 +812,11 @@ sub blockParse
     my $parserStateInsertDebug  = 0;
     my $rubyDebug               = 0;
     my $asDebug                 = 0;
+    my $reMarkDebug             = 0;
 
-    $cppDebug = $cppDebugDefault || $HeaderDoc::fileDebug;
+    if ($asDebug && (!$HeaderDoc::AppleScriptDebug)) { $HeaderDoc::AppleScriptDebug = 1; }
+
+    $cppDebug = $cppDebugDefault ? $cppDebugDefault : $HeaderDoc::fileDebug;
 
     # State variables (part 1 of 3)
     # my $typestring = "";
@@ -893,7 +944,7 @@ sub blockParse
                                   # that don't begin with parenthesis or brace.
     # my $inBrackets = 0;           # square brackets ([]).
     my $inPType = 0;              # in pascal types.
-    my $inRegexp = 0;             # in perl regexp.
+    my $inRegexp = 0;             # in regexp.
     my $leavingRegexp = 0;        # inRegexp just went to zero, but don't process
                                   # this symbol differently in case it's a brace
                                   # or parenthesis.
@@ -911,10 +962,10 @@ sub blockParse
                                   # This prevents the end-of-comment character
                                   # itself from being added....
 
-    my $regexppattern = "";       # optional characters at start of regexp
-    my $singleregexppattern = ""; # members of regexppattern that take only
-                                  # one argument instead of two.
-    my $regexpcharpattern = "";   # legal chars to start a regexp.
+    #### my $regexppattern = "";       # optional characters at start of regexp
+    #### my $singleregexppattern = ""; # members of regexppattern that take only
+                                  #### # one argument instead of two.
+    #### my $regexpcharpattern = "";   # legal chars to start a regexp.
     my @regexpStack = ();         # stack of RE tokens (since some can nest).
 
     # Get the parse tokens from Utilities.pm.
@@ -934,6 +985,13 @@ sub blockParse
     my $accessregexp = $parseTokens{accessregexp};
     my $requiredregexp = $parseTokens{requiredregexp};
     my $moduleregexp = $parseTokens{moduleregexp};
+
+    my $regexppattern = $parseTokens{regexppattern};
+    my $singleregexppattern = $parseTokens{singleregexppattern};
+    my $regexpfirstcharpattern = $parseTokens{regexpfirstcharpattern};
+    my $regexpcharpattern = $parseTokens{regexpcharpattern};
+    my $regexpAllowedAfter = $parseTokens{regexpAllowedAfter};
+    my $TCLregexpcommand = $parseTokens{TCLregexpcommand};
 
 # print STDERR "SOCONSTRUCTOR: \"$parseTokens{soconstructor}\"\n";
 
@@ -960,12 +1018,12 @@ sub blockParse
     # Set up regexp patterns for perl, variable for perl or shell.
     if ($lang eq "perl" || $lang eq "shell" || $lang eq "tcl") {
 	if ($lang eq "perl") {
-		# $regexpcharpattern = '\\{|\\#\\(|\\/|\\\'|\\"|\\<|\\[|\\`';
-		# "}" vi bug workaround for previous line
-		$regexpcharpattern = "[[|{#(/'\"<`]";
-		# "}" vi bug workaround for previous line
-		$regexppattern = "qq|qr|qx|qw|q|m|s|tr|y";
-		$singleregexppattern = "qq|qr|qx|qw|q|m";
+		#### # $regexpcharpattern = '\\{|\\#\\(|\\/|\\\'|\\"|\\<|\\[|\\`';
+		#### # "}" vi bug workaround for previous line
+		#### $regexpcharpattern = "[[|{#(/'\"<`]";
+		#### # "}" vi bug workaround for previous line
+		#### $regexppattern = "qq|qr|qx|qw|q|m|s|tr|y";
+		#### $singleregexppattern = "qq|qr|qx|qw|q|m";
 	}
     }
 
@@ -1054,6 +1112,7 @@ sub blockParse
     # my $classtype = "";
     # my $inClass = 0;
 
+    my $asConcat = "";
     my $pushParserStateAfterToken = 0;
     my $pushParserStateAfterWordToken = 0;
     my $pushParserStateAtBrace = 0;
@@ -1110,7 +1169,9 @@ sub blockParse
 	print STDERR "LINE[$inputCounter] : $line\n" if ($offsetDebug);
 
 	# The tokenizer
-	if ($lang eq "perl" || $lang eq "shell") {
+	if ($lang eq "perl") {
+	    @parts = split(/(->|=>|\&\&|\|\||"|'|\#|\{|\}|\(|\)|\s|;;|;|::|\\|\<\<|\W)/, $line);
+	} elsif ($lang eq "shell") {
 	    @parts = split(/("|'|\#|\{|\}|\(|\)|\s|;;|;|::|\\|\<\<|\W)/, $line);
 	} elsif ($lang eq "tcl") {
 	    @parts = split(/("|'|\#|\{|\}|\(|\)|\s|;|\\|::|\/\*|\*\/|\W)/, $line);
@@ -1156,7 +1217,7 @@ sub blockParse
 	if ($localDebug || $cppDebug || $spaceDebug || $cppDebugFromToken) {
 		foreach my $partlist (@parts) {
 			print STDERR "PARTLIST: \"$partlist\"\n";
-			if ($partlist eq $cppDebugFromToken) {
+			if ($partlist eq $cppDebugFromToken && length($cppDebugFromToken)) {
 				$cppDebug = 1; $parseDebug = 1; $macroDebug = 1;
 			}
 		}
@@ -1257,10 +1318,10 @@ sub blockParse
 						$noCPPThisToken = 1;
 					}
 				}
-				if ($inCPPSpecial && $part =~ /(ifdef|ifndef)/) {
+				if ($inCPPSpecial && $part =~ /^(ifdef|ifndef)$/) {
 					print STDERR "CPPSpecial: ifdef/ifndef\n" if ($cppDebug);
 					$parserState->{NEXTTOKENNOCPP} = 2;
-				} elsif ($inCPPSpecial && $part =~ /if/) {
+				} elsif ($inCPPSpecial && $part =~ /^if$/) {
 					print STDERR "CPPSpecial: if\n" if ($cppDebug);
 					$parserState->{NEXTTOKENNOCPP} = 1;
 				}
@@ -1577,7 +1638,12 @@ if ($localDebug || $cppDebug) {foreach my $partlist (@parts) {print STDERR "POST
 	    my $hideTokenAndMaybeContents = 0;
 	    my $bshandled = 0;
 	    my $setIsAvailable = 0;
+	    my $trailingHide = 0;
 	    $treeSkip = 0;
+	    my $reMark = "";
+
+	    print "PARSER STATE COUNT: ".scalar(@parserStack)."\n" if ($parserStackDebug > 1);
+	    $parserState->print() if ($parserStackDebug > 1);
 
 	    print STDERR "INMACROLINE: ".$parserState->{inMacroLine}."\n" if ($localDebug || $parseDebug || $parmDebug);
 	    if ($part) { $leavingRegexp = 0; } # Reset to 0 at the top of the loop.
@@ -1594,6 +1660,10 @@ if ($localDebug || $cppDebug) {foreach my $partlist (@parts) {print STDERR "POST
 	    # consecutively, etc.
 
 	    print STDERR "MYPART: \"$part\"\n" if ($localDebug || $spaceDebug);
+
+	    if ($braceDebug) {
+		print STDERR "TOBS: \"".peek(\@braceStack)."\"\n";
+	    }
 
 	    # print STDERR "pushedfuncbrace: ".$parserState->{pushedfuncbrace}."\n";
 
@@ -1635,9 +1705,10 @@ if ($localDebug || $cppDebug) {foreach my $partlist (@parts) {print STDERR "POST
 			next;
 	    }
 	    print STDERR "PART IS \"$part\"\n" if ($localDebug || $parserStackDebug || $parseDebug || $liteDebug || $spaceDebug || $tokenDebug);
+	    print STDERR "SPS: ".scalar(@parserStack)." BSC: ".(scalar(@braceStack))." IBSC: ".$parserState->{initbsCount}."\n" if ($parserStackDebug);
 	    print STDERR "QUOTED: ".$parserState->isQuoted($lang, $sublang)."\n" if ($localDebug || $parserStackDebug || $parseDebug || $liteDebug || $spaceDebug);
 	    print STDERR "CURLINE IS \"$curline\"\n" if ($localDebug || $hangDebug || $liteDebug);
-	    print STDERR "RETURNTYPE IS \"$parserState->{returntype}\"\n" if ($localDebug || $hangDebug || $liteDebug);
+	    # print STDERR "RETURNTYPE IS \"$parserState->{returntype}\"\n" if ($localDebug || $hangDebug || $liteDebug);
 	    print STDERR "INOP: ".$parserState->{inOperator}."\n" if ($operatorDebug);
 
 	    if (!length($nextpart)) {
@@ -1660,7 +1731,7 @@ if ($localDebug || $cppDebug) {foreach my $partlist (@parts) {print STDERR "POST
 		# if ($part !~ /(\s|<)/)
 		print STDERR "OCCParse Case 2\n" if ($liteDebug);
 
-		if (($part =~ /(\-|\+|\w|\@)/ || ($part eq "/*" && $nextpart eq "!")) && !$parserState->{inComment} && !$parserState->{inInlineComment}) {
+		if (($part =~ /(#|\-|\+|\w|\@)/ || ($part eq "/*" && $nextpart eq "!")) && !$parserState->{inComment} && !$parserState->{inInlineComment}) {
 			# die("PART: $part NP: $nextpart\n");
 			print STDERR "OCCParse Case 2a\n" if ($liteDebug);
 			print STDERR "Last tree node set to $treeCur [1]\n" if ($parserStateInsertDebug);
@@ -1714,11 +1785,14 @@ if ($localDebug || $cppDebug) {foreach my $partlist (@parts) {print STDERR "POST
 		print STDERR "PART: posstypes: $parserState->{posstypes}\n";
 		print STDERR "PART: seenBraces: $parserState->{seenBraces}\n";
 		print STDERR "SEENIF: ".$parserState->{seenIf}." INIF: ".$parserState->{INIF}."\n";
+	    } elsif ($parserStateInsertDebug) {
+		print STDERR "PART: seenBraces: $parserState->{seenBraces}\n";
 	    }
 	    if ($parseDebug || $regexpDebug) {
 		print STDERR "PART: inRegexp: $inRegexp inRegexpCharClass: $inRegexpCharClass\n";
 		print STDERR "PART: inRegexpTrailer: $inRegexpTrailer inRegexpFirstPart: $inRegexpFirstPart\n";
 		print STDERR "PART: leavingRegexp: $leavingRegexp regexpNoInterpolate: $regexpNoInterpolate\n";
+		print STDERR "PART: inTCLRegExpCommand: ".$parserState->{inTCLRegExpCommand}." afterNL: ".$parserState->{afterNL}."\n";
 	    }
 	    if ($parseDebug) {
 		print STDERR "PART: seenTilde: $parserState->{seenTilde}\n";
@@ -1786,6 +1860,9 @@ if ($localDebug || $cppDebug) {foreach my $partlist (@parts) {print STDERR "POST
 		}
 
 		$treeCur = $treeCur->addSibling($part, $hidden);
+		if ($HeaderDoc::includeFunctionContents && $reMark) {
+			$treeCur->{RE_STATE} = $reMark;
+		}
 		$treeCur->isAvailabilityMacro(1);
 		# print STDERR "SET IS AVAILABLE[2] FOR PART $part\n";
 
@@ -1813,13 +1890,15 @@ if ($localDebug || $cppDebug) {foreach my $partlist (@parts) {print STDERR "POST
 
 	print "IC: $parserState->{inClass} TOK: $part\n" if ($parseDebug || $classDebug);
 
-	    my $externCDebug = 0;
+	my $externCDebug = 0;
+	my $iskw = isKeyword($part, $keywordhashref, $case_sensitive);
+
+	if ($HeaderDoc::includeFunctionContents || !$parserState->{seenBraces}) {
 
 	    # Handle the GCC "__attribute__" extension outside the context of
 	    # the parser because it isn't part of the language and massively
 	    # breaks the syntax.
 	    # Same for asm
-	    my $iskw = isKeyword($part, $keywordhashref, $case_sensitive);
 	    if (($iskw == 8) && !$parserState->{attributeState} &&
 		!$parserState->{parsedParamParse} &&
 		!$parserState->{inBrackets} &&
@@ -1846,6 +1925,9 @@ if ($localDebug || $cppDebug) {foreach my $partlist (@parts) {print STDERR "POST
 
 		# Add __attribute__ as the next token.
 		$treeCur = $treeCur->addSibling($part, 0);
+		if ($HeaderDoc::includeFunctionContents && $reMark) {
+			$treeCur->{RE_STATE} = $reMark;
+		}
 		push(@treeStack, $treeCur);
 
 		# Nest all contents one level lower.
@@ -1870,6 +1952,9 @@ if ($localDebug || $cppDebug) {foreach my $partlist (@parts) {print STDERR "POST
 			$parserState->{attributeState} = -1;
 		}
 		$treeCur = $treeCur->addSibling($part, 0);
+		if ($HeaderDoc::includeFunctionContents && $reMark) {
+			$treeCur->{RE_STATE} = $reMark;
+		}
 		$part = $nextpart;
 		next;
 	    } elsif ($parserState->{attributeState} < 0) {
@@ -1884,6 +1969,9 @@ if ($localDebug || $cppDebug) {foreach my $partlist (@parts) {print STDERR "POST
 			print STDERR "GCC attribute close paren, count=".(0-$parserState->{attributeState})."\n" if ($localDebug || $gccAttributeDebug);
 		}
 		$treeCur = $treeCur->addSibling($part, 0);
+		if ($HeaderDoc::includeFunctionContents && $reMark) {
+			$treeCur->{RE_STATE} = $reMark;
+		}
 		if (!$parserState->{attributeState}) {
 			print STDERR "GCC attribute: done collecting.\n" if ($localDebug || $gccAttributeDebug);
 
@@ -1930,6 +2018,8 @@ if ($localDebug || $cppDebug) {foreach my $partlist (@parts) {print STDERR "POST
 		}
 	    }
 
+	}
+
 	    # Here be the parser.  Abandon all hope, ye who enter here.
 	    $treepart = "";
 
@@ -1955,8 +2045,8 @@ if ($localDebug || $cppDebug) {foreach my $partlist (@parts) {print STDERR "POST
 
 			print STDERR "parserState pushed onto stack[PROTOCOL]\n" if ($parserStackDebug);
 			$parserState->{inProtocol} = -1;
-			$parserState->{lastTreeNode} = $treeCur;
 			print STDERR "Last tree node set to $treeCur [2]\n" if ($parserStateInsertDebug);
+			$parserState->{lastTreeNode} = $treeCur;
 			$curline = "";
 			$parserState->{storeDec} = $declaration;
 			$parserState->{freezereturn} = 1;
@@ -2100,8 +2190,7 @@ if ($localDebug || $cppDebug) {foreach my $partlist (@parts) {print STDERR "POST
 			} else {
 				$parserState->{implementsClass} = "";
 			}
-		} elsif ($parserState->isLeftBrace($part, $lang, $parseTokens{lbrace}, $parseTokens{lbraceunconditionalre}, $parseTokens{lbraceconditionalre},
-		         $parseTokens{classisbrace}, $parseTokens{functionisbrace}, $case_sensitive, scalar(@braceStack)) || $part eq ";") {
+		} elsif ($parserState->isLeftBrace($part, $lang, \%parseTokens, $case_sensitive, scalar(@braceStack)) || $part eq ";") {
 
 			# $part eq "{"
 			print STDERR "INCLASS BRCSEMI\n" if ($parseDebug || $classDebug);
@@ -2214,23 +2303,29 @@ if ($localDebug || $cppDebug) {foreach my $partlist (@parts) {print STDERR "POST
 
 	$parserState->dbprint() if ($regexpDebug == 2);
 	print STDERR "LASTNSPART: $lastnspart\n" if ($regexpDebug == 2);
-	print STDERR "
-		(($inRegexp || $parserState->{lastsymbol} eq \"~\" ||
-		  ((!$inRegexp) &&
-		   ($parserState->{lastsymbol} =~ /[=,(]/ ||
-		    ($parserState->{lastsymbol} eq \"\" && $lastnspart eq \"\" && peek(\"".peek(\@braceStack)."\") eq \"(\")
-		   ) && $part =~ /\// && !$parserState->{inTemplate} &&
-		   length($regexpcharpattern) &&
-		   !($inRegexp || $inRegexpTrailer ||
-		     $parserState->{inString} || $parserState->{inComment} ||
-		     $parserState->{inInlineComment} || $parserState->{inChar})
-		  )
-		 ) &&
-		 (length($regexpcharpattern) &&
-		  $part =~ /^($regexpcharpattern)$/ &&
-		  (!$inRegexpCharClass) &&
-		  (!scalar(@regexpStack) || $part eq peekmatch(\@regexpStack, $lang, $fullpath, $inputCounter))
-		 )
+	print STDERR "\n
+		(($inRegexp &&\n
+		    (length($regexpcharpattern) &&\n
+		       $part =~ /^($regexpcharpattern)$/ &&\n
+		       (!$inRegexpCharClass) &&\n
+		       (!scalar(\@regexpStack) || $part eq peekmatch(\\\@regexpStack, $lang, $fullpath, $inputCounter))\n
+		    )\n
+		 ) || (\n
+		    (!$inRegexp) &&\n
+		       ($parserState->{lastsymbol} =~ /$regexpAllowedAfter/ ||\n
+		        $parserState->{inTCLRegExpCommand} ||\n
+		          ($parserState->{lastsymbol} eq \"\" && $lastnspart eq \"(\" && peek(\\\@braceStack) eq \"(\")\n
+		       ) && $part =~ /\// && !$parserState->{inTemplate} &&\n
+		       length($regexpfirstcharpattern) &&\n
+		       (!($inRegexp || $inRegexpTrailer ||\n
+		          $parserState->{inString} || $parserState->{inComment} ||\n
+		          $parserState->{inInlineComment} || $parserState->{inChar})) &&\n
+		       (!$parserState->isRubyOpenQuote($part) || $parserState->isRubyCloseQuote($part)) &&\n
+		       (length($regexpfirstcharpattern) &&\n
+		           $part =~ /^($regexpfirstcharpattern)$/ &&\n
+		           (!$inRegexpCharClass) &&\n
+		           (!scalar(\@regexpStack) || $part eq peekmatch(\\\@regexpStack, $lang, $fullpath, $inputCounter))\n
+		       )\n
 \n" if ($regexpDebug == 2);
 
 	if ($HeaderDoc::parseIfElse && (!$parserState->{inMacro} && !$parserState->{inMacroLine} && !($parserState->{inString} || $parserState->{inComment} || $parserState->{inInlineComment} || $parserState->{inChar}))) {
@@ -2303,52 +2398,117 @@ if ($localDebug || $cppDebug) {foreach my $partlist (@parts) {print STDERR "POST
 		  $part eq "::" &&
 	          !$parserState->{classNameConcat} &&
 	          !$parserState->{variableNameConcat} &&
-	          !$parserState->{seenBraces}) {
+	          ($HeaderDoc::includeFunctionContents || !$parserState->{seenBraces})) {
 		print STDERR "Perl CONCAT -> 1\n" if ($liteDebug);
 			$parserState->{variableNameConcat} = 2;
 	    };
+
+
+	    if ($part =~ /[\n\r]/) {
+		# 2 until first non-space token.
+		$parserState->{afterNL} = 2;
+
+		if ($lang eq "tcl") {
+			if ($parserState->{inTCLRegExpCommand}) {
+				$parserState->{inTCLRegExpCommand} = 0;
+			}
+		}
+	    } elsif ($parserState->{afterNL} == 1) {
+			# 0 after first non-space token.
+			$parserState->{afterNL} = 0;
+	    } elsif ($parserState->{afterNL} == 2 && $part =~ /\S/) {
+			# 1 during first non-space token.
+			$parserState->{afterNL} = 1;
+	    }
+
 
 	    SWITCH: {
 		# Blank declaration handlers (mostly for misuse of
 		# OSMetaClassDeclareReservedUsed and similar)
 
-		(($lang eq "applescript") && !$argparse && ($part =~ /(of|in)/) && 
+		(($lang eq "applescript") && !$argparse && ($part eq "|") &&
 		 !($parserState->{inString} || $parserState->{inComment} || $parserState->{inInlineComment} ||
 		   $parserState->{inChar})) && do {
+			print STDERR "APPLESCRIPT CONCAT: CASE AS_00a\n" if ($liteDebug);
+			if ($asConcat) {
+				$part = $asConcat . $part;
+				$asConcat = "";
+				# Fall through.
+			} else {
+				$asConcat = $part;
+				$part = "";
+				last SWITCH;
+			}
+		};
+
+		(($lang eq "applescript") && !$argparse && ($asConcat) &&
+		 !($parserState->{inString} || $parserState->{inComment} || $parserState->{inInlineComment} ||
+		   $parserState->{inChar})) && do {
+			print STDERR "APPLESCRIPT CONCAT: CASE AS_00b\n" if ($liteDebug);
+			$asConcat .= $part;
+			$part = "";
+			last SWITCH;
+		};
+
+		(($lang eq "applescript") && !$argparse && ($part =~ /^(of|in)$/) &&
+		 !($parserState->{inString} || $parserState->{inComment} || $parserState->{inInlineComment} ||
+		   $parserState->{inChar})) && do {
+			print STDERR "APPLESCRIPT OF/IN: CASE AS_00A\n" if ($liteDebug);
 			print STDERR "IN APPLESCRIPT OF/IN: SET TO $part\n" if ($asDebug);
 			$parserState->{inOfIn} = 1;
 			$parserState->{OfIn} = $part;
 			last SWITCH;
 		};
 
-		(($lang eq "applescript") && $parserState->{inOfIn} && ($part =~ /\w/)) && do  {
+		(($lang eq "applescript") &&
+		 !($parserState->{inString} || $parserState->{inComment} || $parserState->{inInlineComment} ||
+		   $parserState->{inChar}) &&
+		 $parserState->{inOfIn} && ($part =~ /\w/)) && do  {
+			print STDERR "APPLESCRIPT OF/IN: CASE AS_00B\n" if ($liteDebug);
 			print STDERR "IN APPLESCRIPT OF/IN: ADDING $part\n" if ($asDebug);
 			$parserState->{OfIn} .= " ".$part;
 			$parserState->{inOfIn} = 0;
 			last SWITCH;
 		};
 		
-		(($lang eq "applescript") && !$argparse && $labelregexp && ($part =~ /$labelregexp/) && ($parserState->{startOfDec} != 1)) && do {
+		(($lang eq "applescript") &&
+		 !($parserState->{inString} || $parserState->{inComment} || $parserState->{inInlineComment} ||
+		   $parserState->{inChar}) &&
+		 !$argparse && $labelregexp && ($part =~ /$labelregexp/) && ($parserState->{startOfDec} != 1)) && do {
+			print STDERR "APPLESCRIPT LABEL: CASE AS_00C\n" if ($liteDebug);
 			print STDERR "IN APPLESCRIPT LABEL: SET TO $part SOD=".$parserState->{startOfDec}."\n" if ($asDebug);
 			$parserState->{inLabel} = 1;
 			$parserState->{ASlabel} = $part;
 			last SWITCH;
 		};
 
-		(($lang eq "applescript") && $labelregexp && $parserState->{inLabel} && ($part =~ /\w/)) && do {
+		(($lang eq "applescript") &&
+		 !($parserState->{inString} || $parserState->{inComment} || $parserState->{inInlineComment} ||
+		   $parserState->{inChar}) &&
+		 $labelregexp && $parserState->{inLabel} && ($part =~ /\w/)) && do {
+			print STDERR "APPLESCRIPT LABEL: CASE AS_00D\n" if ($liteDebug);
 			print STDERR "IN APPLESCRIPT LABEL: ADDING $part\n" if ($asDebug);
 			$parserState->{ASlabel} .= " ".$part;
 			$parserState->{inLabel} = 0;
 			last SWITCH;
 		};
 
-		(($lang eq "applescript") && ($part eq "given")) && do {
+		(($lang eq "applescript") &&
+		 !($parserState->{inString} || $parserState->{inComment} || $parserState->{inInlineComment} ||
+		   $parserState->{inChar}) &&
+		 ($part eq "given")) && do {
+			print STDERR "APPLESCRIPT GIVEN: CASE AS_00E\n" if ($liteDebug);
 			print STDERR "IN APPLESCRIPT GIVEN ($part)\n" if ($asDebug);
 			$parserState->{inGiven} = 1;
 			$parserState->{inLabel} = 0;
 			last SWITCH;
 		};
-		(($lang eq "applescript") && $parserState->{inGiven} && ($part !~ /[\r\n]/)) && do {
+
+		(($lang eq "applescript") && $parserState->{inGiven} &&
+		 !($parserState->{inString} || $parserState->{inComment} || $parserState->{inInlineComment} ||
+		   $parserState->{inChar}) &&
+		 ($part !~ /[\r\n]/)) && do {
+			print STDERR "APPLESCRIPT GIVEN: CASE AS_00F\n" if ($liteDebug);
 			print STDERR "IN APPLESCRIPT GIVEN\n" if ($asDebug);
 			if ($part eq ",") {
 				print STDERR "IN APPLESCRIPT GIVEN COMMA\n" if ($asDebug);
@@ -2363,17 +2523,20 @@ if ($localDebug || $cppDebug) {foreach my $partlist (@parts) {print STDERR "POST
 		};
 
 		# (($lang eq "applescript") && $argparse && ($part eq ":")) && do {
+			# print STDERR "APPLESCRIPT OF/IN: CASE AS_00G\n" if ($liteDebug);
 			# print STDERR "IN APPLESCRIPT GIVEN: IGNORING COLON\n" if ($asDebug);
 			# $treepart = "";
 			# last SWITCH;
 		# };
 
 		(($iskw == 9) && ($parserState->{afterSemi} || $parserState->{firstpastnl})) && do {
+			print STDERR "ISKEYWORD == 9: CASE KW_0A\n" if ($liteDebug);
 			$parserState->{inCase}++;
 			print STDERR "inCase -> ".$parserState->{inCase}."\n" if ($parseDebug || $localDebug || $braceDebug);
 		};
 
 		(($iskw == 10) && ($parserState->{afterSemi} == 2)) && do { #  && ($parserState->{afterSemi} >= 2)) && do {
+			print STDERR "ISKEYWORD == 10: CASE KW_0B\n" if ($liteDebug);
 			# print "AFTERSEMI: ".$parserState->{afterSemi}."\n" if ($parseDebug || $localDebug || $braceDebug);
 			$parserState->{inCase}--;
 			print STDERR "inCase -> ".$parserState->{inCase}."\n" if ($parseDebug || $localDebug || $braceDebug);
@@ -2385,6 +2548,20 @@ if ($localDebug || $cppDebug) {foreach my $partlist (@parts) {print STDERR "POST
 			$part = "";
 			last SWITCH;
 		};
+
+		(length($TCLregexpcommand) && ($part =~ /^$TCLregexpcommand$/) &&
+		   ($parserState->{lastsymbol} eq ";" || $parserState->{afterNL} ||
+			$lasttoken eq "["
+		   ) &&
+		   (!($inRegexp || $inRegexpTrailer || $parserState->{inString} || $parserState->{inComment} || $parserState->{inInlineComment} || $parserState->{inChar}))) && do {
+			print STDERR "TCL REGEXP: CASE 01A\n" if ($liteDebug);
+			$parserState->{inTCLRegExpCommand} = 1;
+
+			# print STDERR "LS: $parserState->{lastsymbol} ANL: $parserState->{afterNL} LT: $lasttoken\n";
+
+			# Fall through
+		};
+
 		(($lang eq "perl" || $lang eq "shell") && $part eq "<<" && !$parserState->{attributeState} &&
                 	!$parserState->{parsedParamParse} &&
                 	!$parserState->{inBrackets} &&
@@ -2401,6 +2578,7 @@ if ($localDebug || $cppDebug) {foreach my $partlist (@parts) {print STDERR "POST
                 	!$parserState->{classNameFound} &&
                 	!$parserState->{inMacro} &&
                 	!$parserState->{inMacroLine}) && do {
+				print STDERR "PERL OR SHELL MULTI-LINE STRING: CASE 01B\n" if ($liteDebug);
 				$parserState->{inString} = 13;
 				$parserState->{endOfString} = "";
 
@@ -2411,16 +2589,22 @@ if ($localDebug || $cppDebug) {foreach my $partlist (@parts) {print STDERR "POST
 				last SWITCH;
 		};
 		(($lang eq "perl" || $lang eq "shell") && ($parserState->{inString} == 13) && ($parserState->{endOfString} eq "") && $part =~ /\S/) && do {
+			print STDERR "PERL OR SHELL MULTI-LINE STRING: CASE 01C\n" if ($liteDebug);
 			$parserState->{endOfString} = $part;
 			last SWITCH;
 		};
 
 		(($lang eq "perl" || $lang eq "shell") && ($parserState->{inString} == 13) && ($part =~ /[\n\r]/)) && do {
+			print STDERR "PERL OR SHELL MULTI-LINE STRING: CASE 01D\n" if ($liteDebug);
 			$parserState->{firstpastnl} = 1;
 			last SWITCH;
 		};
 		(($lang eq "perl" || $lang eq "shell") && ($parserState->{inString} == 13) && ($part eq $parserState->{endOfString}) && $parserState->{firstpastnl}) && do {
-			$treeCur->addSibling($part, 0); $treeSkip = 1;
+			print STDERR "PERL OR SHELL MULTI-LINE STRING: CASE 01E\n" if ($liteDebug);
+			my $tempCur = $treeCur->addSibling($part, 0); $treeSkip = 1;
+			if ($HeaderDoc::includeFunctionContents && $reMark) {
+				$tempCur->{RE_STATE} = $reMark;
+			}
 			$treeCur = pop(@treeStack) || $treeTop;
 			$treeCur->parsedParamCopy(\@{$parserState->{parsedParamList}}, $lang, $sublang);
 			$treeCur = $treeCur->lastSibling();
@@ -2431,11 +2615,13 @@ if ($localDebug || $cppDebug) {foreach my $partlist (@parts) {print STDERR "POST
 		};
 
 		(($lang eq "perl" || $lang eq "shell") && ($parserState->{inString} == 13) && $part =~ /\S/ && $parserState->{firstpastnl}) && do {
+			print STDERR "PERL OR SHELL MULTI-LINE STRING: CASE 01F\n" if ($liteDebug);
 			$parserState->{firstpastnl} = 0;
 			last SWITCH;
 		};
 
 		(($lang eq "perl" || $lang eq "shell") && ($parserState->{inString} == 13)) && do {
+			print STDERR "PERL OR SHELL MULTI-LINE STRING: CASE 01G\n" if ($liteDebug);
 			last SWITCH;
 		};
 
@@ -2521,6 +2707,7 @@ if ($localDebug || $cppDebug) {foreach my $partlist (@parts) {print STDERR "POST
 			last SWITCH;
 		};
 		($parserState->{inMacro} == 1 && ($part ne $parseTokens{soc}) && ($part ne $parseTokens{eoc}) && $part =~ /\s/) && do {
+			print STDERR "INMACRO SPACE: CASE 04A\n" if ($liteDebug);
 			$treepart = $part; $part = "";
 			last SWITCH;
 		};
@@ -2586,7 +2773,7 @@ if ($localDebug || $cppDebug) {foreach my $partlist (@parts) {print STDERR "POST
 			if ($part =~ /[\{\(]/o) {
 				push(@braceStack, $part);
 				push(@parsedParamParseStack, $parserState->{parsedParamParse});
-				print STDERR "PUSHED $part ONTO BRACESTACK\n" if ($macroDebug || $braceDebug);
+				print STDERR "PUSHED $part ONTO BRACESTACK [1]\n" if ($macroDebug || $braceDebug);
 			} elsif ($part =~ /[\}\)]/o) {
 				if ($part ne peekmatch(\@braceStack, $lang, $fullpath, $inputCounter)) {
 					if ($parserState->{macroNoTrunc} == 1) {
@@ -2596,7 +2783,7 @@ if ($localDebug || $cppDebug) {foreach my $partlist (@parts) {print STDERR "POST
 				}
 				my $temp = pop(@braceStack);
 				$parserState->{parsedParamParse} = pop(@parsedParamParseStack);
-				print STDERR "POPPED $temp FROM BRACESTACK\n" if ($macroDebug || $braceDebug);
+				print STDERR "POPPED $temp FROM BRACESTACK [1]\n" if ($macroDebug || $braceDebug);
 			}
 
 			if ($part =~ /\S/o) {
@@ -2627,6 +2814,7 @@ if ($localDebug || $cppDebug) {foreach my $partlist (@parts) {print STDERR "POST
 			# Fall through.
 		};
 		(length($parseTokens{constname}) && $part eq $parseTokens{constname} && !($inRegexp || $inRegexpTrailer || $parserState->{inString} || $parserState->{inComment} || $parserState->{inInlineComment} || $parserState->{inChar}) && (!(scalar(@braceStack) - $parserState->{initbsCount}))) && do {
+			print STDERR "CONST: CASE 06B\n" if ($liteDebug);
 			$parserState->{constKeywordFound} = 1;
 			print STDERR "DETECTED CONSTANT KEYWORD\n" if ($localDebug || $parseDebug);
 
@@ -2635,7 +2823,7 @@ if ($localDebug || $cppDebug) {foreach my $partlist (@parts) {print STDERR "POST
 		# print STDERR "IRE: $inRegexp IRT: $inRegexpTrailer IS: $parserState->{inString} ICo $parserState->{inComment} ILC: $parserState->{inInlineComment} ICh $parserState->{inChar}\n";
 		# print STDERR "IRE: $inRegexp IRT: $inRegexpTrailer IS: $parserState->{inString} ICo $parserState->{inComment} ILC: $parserState->{inInlineComment} ICh $parserState->{inChar}\n";
 
-		(length($regexppattern) && $parserState->{lastsymbol} ne "\$" && $part =~ /^($regexppattern)$/ && !($inRegexp || $inRegexpTrailer || $parserState->{inString} || $parserState->{inComment} || $parserState->{inInlineComment} || $parserState->{inChar})) && do {
+		(length($regexppattern) && $part ne $parseTokens{soc} && $part ne $parseTokens{eoc} && $part ne $parseTokens{ilc} && $part ne $parseTokens{ilc_b} && $parserState->{lastsymbol} ne "\$" && $part =~ /^($regexppattern)$/ && !($inRegexp || $inRegexpTrailer || $parserState->{inString} || $parserState->{inComment} || $parserState->{inInlineComment} || $parserState->{inChar})) && do {
 			print STDERR "REGEXP PATTERN: CASE 07\n" if ($liteDebug);
 			my $match = $1;
 			print STDERR "REGEXP WITH PREFIX\n" if ($regexpDebug);
@@ -2653,28 +2841,40 @@ if ($localDebug || $cppDebug) {foreach my $partlist (@parts) {print STDERR "POST
 				if ($part eq "tr") { $regexpNoInterpolate = 1; }
 				# if ($part =~ /tr/) { $regexpNoInterpolate = 1; }
 			}
+			$reMark = "RE_PREFIX";
+			if ($reMarkDebug) { print STDERR "REMARK: $reMark\n"; }
 			$inRegexpFirstPart = 2;
 			last SWITCH;
 		}; # end regexppattern
-		(($inRegexp || $parserState->{lastsymbol} eq "~" ||
-		  ((!$inRegexp) &&
-		   ($parserState->{lastsymbol} =~ /[=,(]/ ||
-		    ($parserState->{lastsymbol} eq "" && $lastnspart eq "(" && peek(\@braceStack) eq "(")
-		   ) && $part =~ /\// && !$parserState->{inTemplate} &&
-		   length($regexpcharpattern) &&
-		   !($inRegexp || $inRegexpTrailer ||
-		     $parserState->{inString} || $parserState->{inComment} ||
-		     $parserState->{inInlineComment} || $parserState->{inChar})
-		  )
-		 ) &&
-		 (length($regexpcharpattern) &&
-		  $part =~ /^($regexpcharpattern)$/ &&
-		  (!$inRegexpCharClass) &&
-		  (!scalar(@regexpStack) || $part eq peekmatch(\@regexpStack, $lang, $fullpath, $inputCounter))
-		 )
+		(($inRegexp &&
+		    (length($regexpcharpattern) &&
+		       $part =~ /^($regexpcharpattern)$/ &&
+		       (!$inRegexpCharClass) &&
+		       (!scalar(@regexpStack) || $part eq peekmatch(\@regexpStack, $lang, $fullpath, $inputCounter))
+		    )
+		 ) || (
+		    (!$inRegexp) && $part ne $parseTokens{soc} && $part ne $parseTokens{eoc} && $part ne $parseTokens{ilc} && $part ne $parseTokens{ilc_b} &&
+		       ($parserState->{lastsymbol} =~ /$regexpAllowedAfter/ ||
+			($parseTokens{regexpAllowedAtStartOfLine} && $parserState->{afterNL}) ||
+		        $parserState->{inTCLRegExpCommand} ||
+		          ($parserState->{lastsymbol} eq "" && $lastnspart eq "(" && peek(\@braceStack) eq "(")
+		       ) &&
+		       length($regexpfirstcharpattern) &&
+		       $part =~ /$regexpfirstcharpattern/ && !$parserState->{inTemplate} &&
+		       (!($inRegexp || $inRegexpTrailer ||
+		          $parserState->{inString} || $parserState->{inComment} ||
+		          $parserState->{inInlineComment} || $parserState->{inChar})) &&
+		       (!$parserState->isRubyOpenQuote($part) || $parserState->isRubyCloseQuote($part)) &&
+		       (!$inRegexpCharClass) &&
+		       (!scalar(@regexpStack) || $part eq peekmatch(\@regexpStack, $lang, $fullpath, $inputCounter))
+		       )
 		) && do {
 			print STDERR "REGEXP CHARACTER: CASE 08\n" if ($liteDebug);
 			print STDERR "REGEXP?\n" if ($regexpDebug);
+
+			if ($parserState->{inTCLRegExpCommand}) {
+				$parserState->{inTCLRegExpCommand} = 0;
+			}
 
 			# if ($lasttoken eq "\\") 
 			if ($parserState->isQuoted($lang, $sublang) ||
@@ -2692,12 +2892,18 @@ if ($localDebug || $cppDebug) {foreach my $partlist (@parts) {print STDERR "POST
 					$inRegexp = 2;
 					print STDERR "IRFP -> 1\n" if ($regexpDebug);
 					$inRegexpFirstPart = 1;
+					$reMark = "RE_START";
+					if ($reMarkDebug) { print STDERR "REMARK: $reMark\n"; }
 				} elsif ($inRegexpFirstPart != 2) {
 					print STDERR "IRFP -> 0\n" if ($regexpDebug);
 					$inRegexpFirstPart = 0;
+					$reMark = "RE_PARTSEP";
+					if ($reMarkDebug) { print STDERR "REMARK: $reMark\n"; }
 				} else {
 					print STDERR "IRFP -> 1\n" if ($regexpDebug);
 					$inRegexpFirstPart = 1;
+					$reMark = "RE_START";
+					if ($reMarkDebug) { print STDERR "REMARK: $reMark\n"; }
 				}
 	
 				$lasttoken = $part;
@@ -2721,7 +2927,11 @@ if ($localDebug || $cppDebug) {foreach my $partlist (@parts) {print STDERR "POST
 						print STDERR "PUSHING $part ONTO REGEXPSTACK [1]\n" if ($localDebug || $parseDebug || $regexpDebug);
 						push(@regexpStack, $part);
 						$inRegexp--;
-						if (!$inRegexp) { $leavingRegexp = 1; }
+						if (!$inRegexp) {
+							$leavingRegexp = 1;
+							$reMark = "RE_END";
+							if ($reMarkDebug) { print STDERR "REMARK: $reMark\n"; }
+						}
 						print STDERR "INREGEXP -> $inRegexp [4]\n" if ($regexpDebug);
 					} else {
 						my $match = peekmatch(\@regexpStack, $lang, $fullpath, $inputCounter);
@@ -2730,14 +2940,22 @@ if ($localDebug || $cppDebug) {foreach my $partlist (@parts) {print STDERR "POST
 
 						if (!scalar(@regexpStack) && ($match eq $part)) {
 							$inRegexp--;
-							if (!$inRegexp) { $leavingRegexp = 1; }
+							if (!$inRegexp) {
+								$leavingRegexp = 1;
+								$reMark = "RE_END";
+								if ($reMarkDebug) { print STDERR "REMARK: $reMark\n"; }
+							}
 							print STDERR "INREGEXP -> $inRegexp [5]\n" if ($regexpDebug);
 							if ($inRegexp == 2 && ($tos eq "/" || $tos eq "|")) {
 								# we don't double the slash or vertical bar in the
 								# middle of a s/foo/bar/g style
 								# expression.
 								$inRegexp--;
-								if (!$inRegexp) { $leavingRegexp = 1; }
+								if (!$inRegexp) {
+									$leavingRegexp = 1;
+									$reMark = "RE_END";
+									if ($reMarkDebug) { print STDERR "REMARK: $reMark\n"; }
+								}
 								print STDERR "INREGEXP -> $inRegexp [6]\n" if ($regexpDebug);
 							}
 							if ($inRegexp) {
@@ -2812,8 +3030,13 @@ if ($localDebug || $cppDebug) {foreach my $partlist (@parts) {print STDERR "POST
 		# Pascal and PHP)
 
 		(($part eq $parseTokens{sofunction} || $part eq $parseTokens{soprocedure} || $part eq $parseTokens{soconstructor}) &&
+		  (($lang ne "applescript") || $parserState->appleScriptFunctionLegalHere(\@braceStack)) &&
 		  !($parserState->{inString} || $parserState->{inComment} || $parserState->{inInlineComment} || $parserState->{inChar}) &&
 		  !(scalar(@braceStack)-$parserState->{initbsCount}) && !$parserState->{seenBraces}) && do {
+
+			# print STDERR "(($part eq $parseTokens{sofunction} || $part eq $parseTokens{soprocedure} || $part eq $parseTokens{soconstructor}) &&".
+		  # "!($parserState->{inString} || $parserState->{inComment} || $parserState->{inInlineComment} || $parserState->{inChar})\n";
+			# print STDERR "AFTERNL: ".$parserState->{afterNL}."\n";
 			print STDERR "SOFUNC: CASE 10\n" if ($liteDebug);
 				if ($part eq $parseTokens{soconstructor}) {
 					$parserState->{isConstructor} = 1;
@@ -2849,6 +3072,9 @@ if ($localDebug || $cppDebug) {foreach my $partlist (@parts) {print STDERR "POST
 				}
 				if ($parseTokens{parmswithcurlybraces}) {
 					$parserState->{pendingBracedParameters} = 1;
+				}
+				if ($parseTokens{functionisapiowner}) {
+					$pushParserStateAtBrace = 1;
 				}
 				last SWITCH;
 			};
@@ -2896,6 +3122,13 @@ if ($localDebug || $cppDebug) {foreach my $partlist (@parts) {print STDERR "POST
 		 (!($parseTokens{classisbrace} && $parserState->{sodclass} eq "class" && (!$parserState->{inRubyClass}))) &&
 		 (!($parseTokens{functionisbrace} && $parserState->{pushedfuncbrace} == 1)) &&
 		 ($parserState->isQuoted($lang, $sublang) || (!$parserState->{newlineIsSemi}))) && do {
+
+			my $precursor = $parserState->clearLeftBracePrecursor();
+			if ($precursor) {
+				push(@braceStack, $precursor);
+				print STDERR "Pushing $precursor onto the brace stack [clearLeftBracePrecursor]\n" if ($HeaderDoc::AppleScriptDebug || $braceDebug || $parseDebug);
+			}
+
 			if ($lang eq "shell") {
 				if ($part eq ";;") {
 					$parserState->{afterSemi} = 2;
@@ -2927,7 +3160,7 @@ if ($localDebug || $cppDebug) {foreach my $partlist (@parts) {print STDERR "POST
 				$treepart = $part;
 				if ($inRegexp) {
 					warn "$fullpath:$inputCounter: warning: multi-line regular expression\n";
-					print "DECTODATE: $declaration".$line."\n";
+					print STDERR "DECTODATE: $declaration".$line."\n";
 				}
 				print STDERR "NLCR\n" if ($tsDebug || $treeDebug || $localDebug);
 				# print "LASTCHAR: $lastchar\n";
@@ -2941,7 +3174,13 @@ if ($localDebug || $cppDebug) {foreach my $partlist (@parts) {print STDERR "POST
 							$postPossNL = 2;
 						} elsif ($treePopOnNewLine && $prev_inInlineComment) {
 							# print STDERR "TPONL: $treePopOnNewLine\n";
-							print STDERR "Keeping parsed parameter $parsedParam because we're leaving a single-line comment.\n" if ($parmDebug || $cppDebug || $localDebug);
+							if ($parserState->{inMacroLine}) {
+								print STDERR "skipped pushing CPP directive $parsedParam into parsedParamList [0]\n" if ($parmDebug || $cppDebug || $localDebug);
+								$parserState->{inMacroLine} = 0;
+								$parsedParam = "";
+							} else {
+								print STDERR "Keeping parsed parameter $parsedParam because we're leaving a single-line comment.\n" if ($parmDebug || $cppDebug || $localDebug);
+							}
 						} else {
 							if ($parserState->{inMacroLine}) {
 								print STDERR "skipped pushing CPP directive $parsedParam into parsedParamList [1]\n" if ($parmDebug || $cppDebug || $localDebug);
@@ -2981,13 +3220,16 @@ if ($localDebug || $cppDebug) {foreach my $partlist (@parts) {print STDERR "POST
 					# pop once for //, possibly again for macro
 					$treePopOnNewLine = 0 - $treePopOnNewLine;
 					$treeCur = $treeCur->addSibling($treepart, 0);
+					if ($HeaderDoc::includeFunctionContents && $reMark) {
+						$treeCur->{RE_STATE} = $reMark;
+					}
 					bless($treeCur, "HeaderDoc::ParseTree");
 					# push(@treeStack, $treeCur);
 					$treeSkip = 1;
 					$treeCur = pop(@treeStack);
 					if (!$treeCur) {
 						$treeCur = $treeTop;
-						warn "$fullpath:$inputCounter: warning: Attempted to pop off top of tree\n";
+						warn "$fullpath:$inputCounter: warning: Attempted to pop off top of tree";
 					}
 					$treeCur->parsedParamCopy(\@{$parserState->{parsedParamList}}, $lang, $sublang);
 					$treeCur = $treeCur->lastSibling();
@@ -2998,13 +3240,16 @@ if ($localDebug || $cppDebug) {foreach my $partlist (@parts) {print STDERR "POST
 				if ($treePopOnNewLine == 1 || ($treePopOnNewLine && !$parserState->isQuoted($lang, $sublang))) {
 					# $parserState->{lastsymbol} ne "\\"
 					$treeCur = $treeCur->addSibling($treepart, 0);
+					if ($HeaderDoc::includeFunctionContents && $reMark) {
+						$treeCur->{RE_STATE} = $reMark;
+					}
 					bless($treeCur, "HeaderDoc::ParseTree");
 					# push(@treeStack, $treeCur);
 					$treeSkip = 1;
 					$treeCur = pop(@treeStack);
 					if (!$treeCur) {
 						$treeCur = $treeTop;
-						warn "$fullpath:$inputCounter: warning: Attempted to pop off top of tree\n";
+						warn "$fullpath:$inputCounter: warning: Attempted to pop off top of tree";
 					}
 					$treeCur->parsedParamCopy(\@{$parserState->{parsedParamList}}, $lang, $sublang);
 					$treeCur = $treeCur->lastSibling();
@@ -3022,7 +3267,7 @@ if ($localDebug || $cppDebug) {foreach my $partlist (@parts) {print STDERR "POST
 
 		# C++ template handlers
 
-		($part eq $parseTokens{sotemplate} && (($lang eq "perl" && $parserState->{lastsymbol} eq "=" && !$inRegexp) || ($lang ne "perl" && (!$parserState->{seenBraces}) && (!$parserState->{inMacroLine}) && (!$parserState->{inMacro}) && (!$parserState->{INIF}))) && ($parserState->{inOperator} != 1)) && do {
+		($part eq $parseTokens{sotemplate} && (($lang eq "perl" && $parserState->{lastsymbol} eq "=" && !$inRegexp) || ($lang ne "perl" && ($HeaderDoc::includeFunctionContents || !$parserState->{seenBraces}) && (!$parserState->{inMacroLine}) && (!$parserState->{inMacro}) && (!$parserState->{INIF}))) && ($parserState->{inOperator} != 1)) && do {
 			print STDERR "C++ TEMPLATE: CASE 14\n" if ($liteDebug);
 			    if (!($parserState->{inString} || $parserState->{inComment} || $parserState->{inInlineComment} || $parserState->{inChar})) {
 				if ($HeaderDoc::hideIDLAttributes && $lang eq "C" && $sublang eq "IDL") { $hideTokenAndMaybeContents = 3; }
@@ -3037,11 +3282,13 @@ if ($localDebug || $cppDebug) {foreach my $partlist (@parts) {print STDERR "POST
 				$parserState->{onlyComments} = 0;
 				push(@parsedParamParseStack, $parserState->{parsedParamParse});
 				push(@braceStack, $part); pbs(@braceStack);
-				print STDERR "PUSHED $part ONTO BRACESTACK\n" if ($macroDebug || $braceDebug);
+				print STDERR "PUSHED $part ONTO BRACESTACK [2]\n" if ($macroDebug || $braceDebug);
 				print STDERR "LINE: $line\n" if ($regexpDebug && $braceDebug);
-				if (!$parserState->{seenBraces}) { # TREEDONE
+				if ($HeaderDoc::includeFunctionContents || !$parserState->{seenBraces}) { # TREEDONE
 					$treeNest = 1;
-					if (!$parserState->{hollow}) { $sethollow = 1; } # IDL can have this at the start of declaration.
+					if (!$parserState->{seenBraces}) {
+						if (!$parserState->{hollow}) { $sethollow = 1; } # IDL can have this at the start of declaration.
+					}
 					if ($treeDebug) { print STDERR "TS TREENEST -> 1 [8]\n"; }
 					# push(@treeStack, $treeCur);
 					# $treeCur = $treeCur->addChild($part, 0); $treeSkip = 1;
@@ -3051,7 +3298,7 @@ if ($localDebug || $cppDebug) {foreach my $partlist (@parts) {print STDERR "POST
 			    }
 			    last SWITCH;
 			};
-		($part eq $parseTokens{eotemplate} && (($lang eq "perl" && $parserState->{inTemplate} && !$inRegexp) || ($lang ne "perl" && (!$parserState->{seenBraces}) && (!$parserState->{inMacroLine}) && (!$parserState->{inMacro}) && (!$parserState->{INIF}))) && ($parserState->{inOperator} != 1)) && do {
+		($part eq $parseTokens{eotemplate} && (($lang eq "perl" && $parserState->{inTemplate} && !$inRegexp) || ($lang ne "perl" && ($HeaderDoc::includeFunctionContents || !$parserState->{seenBraces}) && (!$parserState->{inMacroLine}) && (!$parserState->{inMacro}) && (!$parserState->{INIF}))) && ($parserState->{inOperator} != 1)) && do {
 			print STDERR "C++ TEMPLATE END: CASE 15\n" if ($liteDebug);
 			    if (!($parserState->{inString} || $parserState->{inComment} || $parserState->{inInlineComment} || $parserState->{inChar}) && (!(scalar(@braceStack)-$parserState->{initbsCount}) || $parserState->{inTemplate})) {
 				if ($parserState->{inTemplate})  {
@@ -3065,13 +3312,20 @@ if ($localDebug || $cppDebug) {foreach my $partlist (@parts) {print STDERR "POST
 				}
 				my $top = pop(@braceStack);
 				$parserState->{parsedParamParse} = pop(@parsedParamParseStack);
-				print STDERR "POPPED $top FROM BRACESTACK\n" if ($macroDebug || $braceDebug);
-				if (!$parserState->{seenBraces}) { # TREEDONE
-					$treeCur->addSibling($part, 0); $treeSkip = 1;
+				print STDERR "POPPED $top FROM BRACESTACK [2]\n" if ($macroDebug || $braceDebug);
+				if ($HeaderDoc::includeFunctionContents || !$parserState->{seenBraces}) { # TREEDONE
+					my $tempCur = $treeCur->addSibling($part, 0); $treeSkip = 1;
+					if ($HeaderDoc::includeFunctionContents && $reMark) {
+						$tempCur->{RE_STATE} = $reMark;
+					}
 					$treeCur = pop(@treeStack) || $treeTop;
-					$treeCur->parsedParamCopy(\@{$parserState->{parsedParamList}}, $lang, $sublang);
+					if (!$parserState->{seenBraces}) { # TREEDONE
+						$treeCur->parsedParamCopy(\@{$parserState->{parsedParamList}}, $lang, $sublang);
+					}
 					$treeCur = $treeCur->lastSibling();
-					$treeCur->parsedParamCopy(\@{$parserState->{parsedParamList}}, $lang, $sublang);
+					if (!$parserState->{seenBraces}) { # TREEDONE
+						$treeCur->parsedParamCopy(\@{$parserState->{parsedParamList}}, $lang, $sublang);
+					}
 					print STDERR "TSPOP [2]: now $treeCur\n" if ($tsDebug || $treeDebug);
 					bless($treeCur, "HeaderDoc::ParseTree");
 				}
@@ -3081,6 +3335,7 @@ if ($localDebug || $cppDebug) {foreach my $partlist (@parts) {print STDERR "POST
 					# set this off.
 					if ($lang eq "perl") {
 						push(@braceStack, $top);
+						print STDERR "PUSHED $top ONTO BRACESTACK [2A]\n" if ($macroDebug || $braceDebug);
 					} else {
 						warn("$fullpath:$inputCounter: warning: Template (angle) brackets do not match.\nWe may have a problem.\n");
 					}
@@ -3089,6 +3344,7 @@ if ($localDebug || $cppDebug) {foreach my $partlist (@parts) {print STDERR "POST
 			    last SWITCH;
 			};
 		($ruby && ($part eq "<") && ($parserState->{sodclass} eq "class")) && do {
+			print STDERR "RUBY LEFT ANGLE BRACE: CASE 15A\n" if ($liteDebug);
 			if (!($parserState->{inString} || $parserState->{inComment} || $parserState->{inInlineComment} || $parserState->{inChar}) && (!(scalar(@braceStack)-$parserState->{initbsCount}))) {
 			    $parserState->{waitingForExceptions} = 1;
 			}
@@ -3201,9 +3457,13 @@ if ($localDebug || $cppDebug) {foreach my $partlist (@parts) {print STDERR "POST
 			}
 		};
 		(length($requiredregexp) && $part =~ /$requiredregexp/) && do {
+			print STDERR "REQUIRED REGEXP: CASE 17A\n" if ($liteDebug);
 			print STDERR "REQUIRED REGEXP MATCH: \"$part\"\n" if ($localDebug || $parseDebug);
 			$hollowskip = 1;
 			print STDERR "hollowskip -> 1 (requiredregexp)\n" if ($parserStateInsertDebug);
+
+			$HeaderDoc::OptionalOrRequired = $part;
+			$parserState->{optionalOrRequired} = $part;
 
 			last SWITCH;
 		};
@@ -3275,7 +3535,7 @@ if ($localDebug || $cppDebug) {foreach my $partlist (@parts) {print STDERR "POST
 					next SWITCH;
 				    }
 				}
-			    if (!$parserState->{seenBraces} && !$parserState->{occmethod}) { # TREEDONE
+			    if (($HeaderDoc::includeFunctionContents || !$parserState->{seenBraces}) && !$parserState->{occmethod}) { # TREEDONE
 				    # $treeCur->addSibling($part, 0); $treeSkip = 1;
 				    $treeNest = 1;
 					if ($treeDebug) { print STDERR "TS TREENEST -> 1 [9]\n"; }
@@ -3338,7 +3598,7 @@ if ($localDebug || $cppDebug) {foreach my $partlist (@parts) {print STDERR "POST
 					# if (($lasttoken !~ /\\$/o) && ($curstring !~ /\\$/o))
 					if (!$parserState->isQuoted($lang, $sublang)) {
 						if (!$parserState->{inString}) {
-						    if (!$parserState->{seenBraces}) { # TREEDONE
+						    if ($HeaderDoc::includeFunctionContents || !$parserState->{seenBraces}) { # TREEDONE
 							$treeNest = 1;
 					if ($treeDebug) { print STDERR "TS TREENEST -> 1 [10]\n"; }
 							# push(@treeStack, $treeCur);
@@ -3346,8 +3606,11 @@ if ($localDebug || $cppDebug) {foreach my $partlist (@parts) {print STDERR "POST
 							# bless($treeCur, "HeaderDoc::ParseTree");
 						    }
 						} else {
-						    if (!$parserState->{seenBraces}) { # TREEDONE
-							$treeCur->addSibling($part, 0); $treeSkip = 1;
+						    if ($HeaderDoc::includeFunctionContents || !$parserState->{seenBraces}) { # TREEDONE
+							my $tempCur = $treeCur->addSibling($part, 0); $treeSkip = 1;
+							if ($HeaderDoc::includeFunctionContents && $reMark) {
+								$tempCur->{RE_STATE} = $reMark;
+							}
 							$treeCur = pop(@treeStack) || $treeTop;
 							$treeCur->parsedParamCopy(\@{$parserState->{parsedParamList}}, $lang, $sublang);
 							$treeCur = $treeCur->lastSibling();
@@ -3377,7 +3640,10 @@ if ($localDebug || $cppDebug) {foreach my $partlist (@parts) {print STDERR "POST
 					$fall_through = 1;
 				} elsif (!$parserState->isQuoted($lang, $sublang)) {
 					if ($inRegexp && $inRegexpFirstPart == 1) {
+						print STDERR "inRegexpCharClass -> 3\n" if ($regexpDebug);
 						$inRegexpCharClass = 3;
+						$reMark = "RE_CCSTART";
+						if ($reMarkDebug) { print STDERR "REMARK: $reMark\n"; }
 					}
 					print STDERR "lbracket\n" if ($localDebug);
 	
@@ -3388,8 +3654,8 @@ if ($localDebug || $cppDebug) {foreach my $partlist (@parts) {print STDERR "POST
 					}
 					push(@parsedParamParseStack, $parserState->{parsedParamParse});
 					push(@braceStack, $part); pbs(@braceStack);
-					print STDERR "PUSHED $part ONTO BRACESTACK\n" if ($macroDebug || $braceDebug);
-					if (!$parserState->{seenBraces}) { # TREEDONE
+					print STDERR "PUSHED $part ONTO BRACESTACK [3]\n" if ($macroDebug || $braceDebug);
+					if ($HeaderDoc::includeFunctionContents || !$parserState->{seenBraces}) { # TREEDONE
 						$treeNest = 1;
 						if ($treeDebug) { print STDERR "TS TREENEST -> 1 [11]\n"; }
 						# push(@treeStack, $treeCur);
@@ -3460,9 +3726,12 @@ if ($localDebug || $cppDebug) {foreach my $partlist (@parts) {print STDERR "POST
 				}
 				my $top = pop(@braceStack);
 				$parserState->{parsedParamParse} = pop(@parsedParamParseStack);
-				print STDERR "POPPED $top FROM BRACESTACK\n" if ($macroDebug || $braceDebug);
-				if (!$parserState->{seenBraces}) { # TREEDONE
-					$treeCur->addSibling($part, 0); $treeSkip = 1;
+				print STDERR "POPPED $top FROM BRACESTACK [3]\n" if ($macroDebug || $braceDebug);
+				if ($HeaderDoc::includeFunctionContents || !$parserState->{seenBraces}) { # TREEDONE
+					my $tempCur = $treeCur->addSibling($part, 0); $treeSkip = 1;
+					if ($HeaderDoc::includeFunctionContents && $reMark) {
+						$tempCur->{RE_STATE} = $reMark;
+					}
 					$treeCur = pop(@treeStack) || $treeTop;
 					$treeCur->parsedParamCopy(\@{$parserState->{parsedParamList}}, $lang, $sublang);
 					$treeCur = $treeCur->lastSibling();
@@ -3484,6 +3753,8 @@ if ($localDebug || $cppDebug) {foreach my $partlist (@parts) {print STDERR "POST
 				if  ($inRegexpCharClass != 4) {
 					print STDERR "Leaving character class.\n" if ($localDebug || $parseDebug || $regexpDebug);
 					$inRegexpCharClass = 0;
+					$reMark = "RE_CCEND";
+					if ($reMarkDebug) { print STDERR "REMARK: $reMark\n"; }
 				}
 			      }
 			      $lastchar = $part;
@@ -3505,7 +3776,7 @@ if ($localDebug || $cppDebug) {foreach my $partlist (@parts) {print STDERR "POST
 			      last SWITCH;
 			    }
 			};
-		($part eq "'") && do {
+		($part eq "'" && $lang ne "applescript") && do {
 			print STDERR "SINGLE QUOTE: CASE 24\n" if ($liteDebug);
 				print STDERR "squo\n" if ($localDebug);
 
@@ -3515,7 +3786,7 @@ if ($localDebug || $cppDebug) {foreach my $partlist (@parts) {print STDERR "POST
 						$parserState->{onlyComments} = 0;
 						print STDERR "[h]onlyComments -> 0\n" if ($macroDebug);
 						if (!$parserState->{inChar}) {
-						    if (!$parserState->{seenBraces}) { # TREEDONE
+						    if ($HeaderDoc::includeFunctionContents || !$parserState->{seenBraces}) { # TREEDONE
 							$treeNest = 1;
 					if ($treeDebug) { print STDERR "TS TREENEST -> 1 [12]\n"; }
 							# push(@treeStack, $treeCur);
@@ -3523,8 +3794,11 @@ if ($localDebug || $cppDebug) {foreach my $partlist (@parts) {print STDERR "POST
 							# bless($treeCur, "HeaderDoc::ParseTree");
 						    }
 						} else {
-						    if (!$parserState->{seenBraces}) { # TREEDONE
-							$treeCur->addSibling($part, 0); $treeSkip = 1;
+						    if ($HeaderDoc::includeFunctionContents || !$parserState->{seenBraces}) { # TREEDONE
+							my $tempCur = $treeCur->addSibling($part, 0); $treeSkip = 1;
+							if ($HeaderDoc::includeFunctionContents && $reMark) {
+								$tempCur->{RE_STATE} = $reMark;
+							}
 							$treeCur = pop(@treeStack) || $treeTop;
 							$treeCur->parsedParamCopy(\@{$parserState->{parsedParamList}}, $lang, $sublang);
 							$treeCur = $treeCur->lastSibling();
@@ -3557,7 +3831,7 @@ if ($localDebug || $cppDebug) {foreach my $partlist (@parts) {print STDERR "POST
 					$parserState->{inInlineComment} = 4;
 					print STDERR "inInlineComment -> 1\n" if ($ilcDebug);
 					$curline = spacefix($curline, $part, $lastchar, $parseTokens{soc}, $parseTokens{eoc}, $parseTokens{ilc}, $parseTokens{ilc_b});
-					if (!$parserState->{seenBraces}) { # TREEDONE
+					if ($HeaderDoc::includeFunctionContents || !$parserState->{seenBraces}) { # TREEDONE
 						$treeNest = 1;
 					if ($treeDebug) { print STDERR "TS TREENEST -> 1 [13]\n"; }
 
@@ -3603,7 +3877,7 @@ if ($localDebug || $cppDebug) {foreach my $partlist (@parts) {print STDERR "POST
 				if (!($parserState->{inComment} || $parserState->{inInlineComment} || $parserState->{inChar} || $parserState->{inString})) {
 					$parserState->{inComment} = 4; 
 					$curline = spacefix($curline, $part, $lastchar);
-					if (!$parserState->{seenBraces}) {
+					if ($HeaderDoc::includeFunctionContents || !$parserState->{seenBraces}) {
 						$treeNest = 1;
 					if ($treeDebug) { print STDERR "TS TREENEST -> 1 [14]\n"; }
 						# print STDERR "TSPUSH\n" if ($tsDebug || $treeDebug);
@@ -3635,12 +3909,19 @@ if ($localDebug || $cppDebug) {foreach my $partlist (@parts) {print STDERR "POST
 					$parserState->{leavingComment} = 1;
 					$curline = spacefix($curline, $part, $lastchar);
 					$ppSkipOneToken = 1;
-					if (!$parserState->{seenBraces}) {
-                                        	$treeCur->addSibling($part, 0); $treeSkip = 1;
+					if ($HeaderDoc::includeFunctionContents || !$parserState->{seenBraces}) {
+						my $tempCur = $treeCur->addSibling($part, 0); $treeSkip = 1;
+						if ($HeaderDoc::includeFunctionContents && $reMark) {
+							$tempCur->{RE_STATE} = $reMark;
+						}
                                         	$treeCur = pop(@treeStack) || $treeTop;
-						$treeCur->parsedParamCopy(\@{$parserState->{parsedParamList}}, $lang, $sublang);
+						if (!$parserState->{seenBraces}) {
+							$treeCur->parsedParamCopy(\@{$parserState->{parsedParamList}}, $lang, $sublang);
+						}
 						$treeCur = $treeCur->lastSibling();
-						$treeCur->parsedParamCopy(\@{$parserState->{parsedParamList}}, $lang, $sublang);
+						if (!$parserState->{seenBraces}) {
+							$treeCur->parsedParamCopy(\@{$parserState->{parsedParamList}}, $lang, $sublang);
+						}
                                         	print STDERR "TSPOP [6]: now $treeCur\n" if ($tsDebug || $treeDebug);
                                         	bless($treeCur, "HeaderDoc::ParseTree");
 					}
@@ -3791,8 +4072,8 @@ if ($localDebug || $cppDebug) {foreach my $partlist (@parts) {print STDERR "POST
 				}
 				push(@parsedParamParseStack, $oldParsedParamParse);
 				push(@braceStack, $part); pbs(@braceStack);
-				print STDERR "PUSHED $part ONTO BRACESTACK\n" if ($macroDebug || $braceDebug);
-				if (!$parserState->{seenBraces}) { # TREEDONE
+				print STDERR "PUSHED $part ONTO BRACESTACK [4]\n" if ($macroDebug || $braceDebug);
+				if ($HeaderDoc::includeFunctionContents || !$parserState->{seenBraces}) { # TREEDONE
 					$treeNest = 1;
 					if ($treeDebug) { print STDERR "TS TREENEST -> 1 [15]\n"; }
 					# push(@treeStack, $treeCur);
@@ -3875,8 +4156,9 @@ print STDERR "SCARYCASE\n" if ($localDebug);
 			    print STDERR "OUTGOING CURLINE: \"$curline\"\n" if ($localDebug);
 			    last SWITCH;
 			};
-		((($part eq ")" && (!$parserState->{inCase})) || (casecmp($part, $parseTokens{rbrace}, $case_sensitive) && ($parserState->{pendingBracedParameters} == 2)))) && do {
+		((($part eq ")" && (!$parserState->{inCase})) || ($parserState->isRightBrace($part, $lang, \%parseTokens, $case_sensitive) && ($parserState->{pendingBracedParameters} == 2)))) && do {
 			print STDERR "CLOSE PAREN: CASE 29\n" if ($liteDebug);
+			# print STDERR "TOBS: \"".peek(\@braceStack)."\"\n";
 			    print STDERR "TOP OF RE STACK IS: \"".peek(\@regexpStack)."\"\n" if ($localDebug || $parseDebug);
 			    if (!($parserState->{inString} || $parserState->{inComment} || $parserState->{inInlineComment} || $parserState->{inChar}) && !($inRegexp && ($regexpNoInterpolate || ($inRegexpFirstPart != 1)) && (peek(\@regexpStack) ne "("))) {
 			      print STDERR "PAST FIRST CHECK\n" if ($localDebug || $parseDebug);
@@ -3913,22 +4195,43 @@ print STDERR "SCARYCASE\n" if ($localDebug);
 				print STDERR "rparen\n" if ($localDebug);
 
 
-				my $test = pop(@braceStack); pbs(@braceStack);
-				$parserState->{parsedParamParse} = pop(@parsedParamParseStack);
-				print STDERR "POPPED $test FROM BRACESTACK\n" if ($macroDebug || $braceDebug);
-				if (!$parserState->{seenBraces}) { # TREEDONE
-					$treeCur->addSibling($part, 0); $treeSkip = 1;
+				my $test = "";
+				my $parenRegexp = 0;
+				# If the first node in the regexp stack is
+				# an open parenthesis, it isn't on the
+				# brace stack, so don't pop it off.
+				if ($inRegexp && ($regexpStack[0] eq "(")) {
+					$parenRegexp = 0;
+				}
+				if (!$parenRegexp) {
+					$test = pop(@braceStack); pbs(@braceStack);
+					$parserState->{parsedParamParse} = pop(@parsedParamParseStack);
+					print STDERR "POPPED $test FROM BRACESTACK [4]\n" if ($macroDebug || $braceDebug);
+				}
+
+				print STDERR "RPAREN SEENBRACES: ".$parserState->{seenBraces}."\n" if ($localDebug || $parserStateInsertDebug);
+				if ($HeaderDoc::includeFunctionContents || !$parserState->{seenBraces}) { # TREEDONE
+					my $tempCur = $treeCur->addSibling($part, 0); $treeSkip = 1;
+					if ($HeaderDoc::includeFunctionContents && $reMark) {
+						$tempCur->{RE_STATE} = $reMark;
+					}
 					$treeCur = pop(@treeStack) || $treeTop;
-					$treeCur->parsedParamCopy(\@{$parserState->{parsedParamList}}, $lang, $sublang);
+					if (!$parserState->{seenBraces}) {
+						$treeCur->parsedParamCopy(\@{$parserState->{parsedParamList}}, $lang, $sublang);
+					}
 					$treeCur = $treeCur->lastSibling();
-					$treeCur->parsedParamCopy(\@{$parserState->{parsedParamList}}, $lang, $sublang);
+					if (!$parserState->{seenBraces}) {
+						$treeCur->parsedParamCopy(\@{$parserState->{parsedParamList}}, $lang, $sublang);
+					}
 					print STDERR "TSPOP [6a]: now $treeCur\n" if ($tsDebug || $treeDebug);
 					bless($treeCur, "HeaderDoc::ParseTree");
 				}
-				if (!($test eq $opentoken)) {
-					warn("$fullpath:$inputCounter: warning: Parentheses do not match.\nWe may have a problem.\n");
-					warn("Declaration to date: $declaration$curline\n");
-					# cluck("backtrace follows\n");
+				if (!$parenRegexp) {
+					if (!($test eq $opentoken)) {
+						warn("$fullpath:$inputCounter: warning: Parentheses do not match.\nWe may have a problem.\n");
+						warn("Declaration to date: $declaration$curline\n");
+						# cluck("backtrace follows\n");
+					}
 				}
 				$curline = spacefix($curline, $part, $lastchar);
 				$parserState->{lastsymbol} = "";
@@ -3957,8 +4260,7 @@ print STDERR "SCARYCASE\n" if ($localDebug);
 			      }
 			    }
 			};
-		(($lang ne "perl" || !($parserState->{inTemplate} || $inRegexp || $leavingRegexp)) && $parserState->isLeftBrace($part, $lang, $parseTokens{lbrace}, $parseTokens{lbraceunconditionalre}, $parseTokens{lbraceconditionalre},
-			$parseTokens{classisbrace}, $parseTokens{functionisbrace}, $case_sensitive, scalar(@braceStack))) && do {
+		(($lang ne "perl" || !($parserState->{inTemplate} || $inRegexp || $leavingRegexp)) && $parserState->isLeftBrace($part, $lang, \%parseTokens, $case_sensitive, scalar(@braceStack))) && do {
 
 			my $brctoken = $part;
 			print STDERR "IRC ".$parserState->{inRubyClass}."\n" if ($rubyDebug || $parseDebug);
@@ -3973,7 +4275,11 @@ print STDERR "SCARYCASE\n" if ($localDebug);
 
 			my $oldParsedParamParse = $parserState->{parsedParamParse};
 			print STDERR "LEFT BRACE: CASE 30\n" if ($liteDebug);
-			    if ($parserState->{onlyComments} && !$parserState->{inComment} && !$parserState->{inInlineComment} && !$parserState->{inChar} && !$inRegexp && !scalar(@parserStack) && !$parserState->{INIF} && !$tempInIf) {
+			    if ($lang eq "applescript" && $pushParserStateAtBrace) {
+				$pushParserStateAtBrace = 0;
+				$pushParserStateAfterToken = 1;
+			    }
+			    if ($parserState->{onlyComments} && !$parserState->{inComment} && !$parserState->{inInlineComment} && !$parserState->{inChar} && !$inRegexp && !scalar(@parserStack) && !$parserState->{INIF} && !$tempInIf && ($lang ne "applescript")) {
 				print STDERR "BAILING NOW\n" if ($externCDebug);
 				$continue_no_return = 1;
 				print STDERR "CONTINUE -> 0 [NORETURN]\n" if ($parseDebug || $cppDebug || $macroDebug || $localDebug || $continueDebug);
@@ -3984,7 +4290,7 @@ print STDERR "SCARYCASE\n" if ($localDebug);
 				print STDERR "PUSHING \"$parsedParam\" onto parsed parameters list ()\n" if ($parseDebug || $asDebug);
 				$parsedParam = "";
 			    }
-			    if ($parserState->{onlyComments} && !$parserState->{inComment} && !$parserState->{inInlineComment} && !$parserState->{inChar} && !$inRegexp && scalar(@parserStack)) {
+			    if ($parserState->{onlyComments} && !$parserState->{inComment} && !$parserState->{inInlineComment} && !$parserState->{inChar} && !$inRegexp && scalar(@parserStack) && $lang ne "applescript") {
 				# Somebody put in a brace in the middle of
 				# a class or else we're seeing ObjC private
 				# class bits.  Either way, throw away the
@@ -4001,6 +4307,10 @@ print STDERR "SCARYCASE\n" if ($localDebug);
 				print STDERR "bracePending -> 0 [brace]\n" if ($localDebug);
 				$parserState->{onlyComments} = 0;
 				print STDERR "[k]onlyComments -> 0\n" if ($macroDebug);
+
+				push(@{$parserState->{parsedParamStateAtBrace}}, $parserState->{parsedParamParse});
+				push(@{$parserState->{parsedParamAtBrace}}, $parsedParam);
+				$parsedParam = "";
 				if (scalar(@{$parserState->{parsedParamList}})) {
 					foreach my $node (@{$parserState->{parsedParamList}}) {
 						$node =~ s/^\s*//so;
@@ -4046,8 +4356,8 @@ print STDERR "SCARYCASE\n" if ($localDebug);
 
 				push(@parsedParamParseStack, $oldParsedParamParse);
 				push(@braceStack, $brctoken); pbs(@braceStack);
-				print STDERR "PUSHED $brctoken ONTO BRACESTACK\n" if ($macroDebug || $braceDebug);
-				if (!$parserState->{seenBraces}) { # TREEDONE
+				print STDERR "PUSHED $brctoken ONTO BRACESTACK [5]\n" if ($macroDebug || $braceDebug);
+				if ($HeaderDoc::includeFunctionContents || !$parserState->{seenBraces}) { # TREEDONE
 					$treeNest = 1;
 					if ($treeDebug) { print STDERR "TS TREENEST -> 1 [16]\n"; }
 					print STDERR "TN -> 1\n" if ($localDebug);
@@ -4078,9 +4388,10 @@ print STDERR "SCARYCASE\n" if ($localDebug);
 			    }
 			    last SWITCH;
 			};
-		(casecmp($part, $parseTokens{rbrace}, $case_sensitive) && ($parserState->{pendingBracedParameters} != 2) && ($lang ne "perl" || !($parserState->{inTemplate} || $inRegexp || $leavingRegexp))) && do {
+		(($parserState->isRightBrace($part, $lang, \%parseTokens, $case_sensitive) || $parserState->{inrbraceargument}) && ($parserState->{pendingBracedParameters} != 2) && ($lang ne "perl" || !($parserState->{inTemplate} || $inRegexp || $leavingRegexp))) && do {
 			# {Treat } within <> as ordinary character in Perl.
 			print STDERR "RIGHT BRACE: CASE 31\n" if ($liteDebug);
+			print STDERR "INBRACEARGUMENT: ".$parserState->{inrbraceargument}."\n" if ($parserStateInsertDebug);
 			    if (!($parserState->{inString} || $parserState->{inComment} || $parserState->{inInlineComment} || $parserState->{inChar} || $inRegexp)) {
 
 				my $oldOC = $parserState->{onlyComments};
@@ -4090,13 +4401,29 @@ print STDERR "SCARYCASE\n" if ($localDebug);
 				print STDERR "[l]onlyComments -> 0\n" if ($macroDebug);
 
 				if ($ruby) { $parserState->{followingrubyrbrace} = 1; }
+				if (($parseTokens{rbracetakesargument}) && (!$parserState->{inrbraceargument})) {
+					$parserState->{inrbraceargument} = 1;
+					# $treePopOnNewLine = 1;
+					# $parserState->{newlineIsSemi} = 1;
+				} elsif ($parserState->{inrbraceargument} && $part =~ /\w/) {
+					$parserState->{inrbraceargument}--;
+					if ($parserState->{seenBraces}) { $trailingHide = 1; }
+				}
 
-				my $bsCount = scalar(@braceStack);
+				if ($parserState->{inrbraceargument}) {
+					print STDERR "Waiting for rbrace argument\n" if ($asDebug || $parserStackDebug || $parseDebug || $braceDebug);
+				} else {
+				    print STDERR "INRBRACEARGUMENT: ".$parserState->{inrbraceargument}."\n" if ($asDebug || $parserStackDebug || $parseDebug || $braceDebug);
 
-				print STDERR "SPS: ".scalar(@parserStack)." BSC: ".$bsCount." IBSC: ".$parserState->{initbsCount}."\n" if ($rubyDebug || $parseDebug);
-				if (scalar(@parserStack) && !($bsCount - $parserState->{initbsCount})) {
+				    my $bsCount = scalar(@braceStack);
+
+				    print STDERR "SPS: ".scalar(@parserStack)." BSC: ".$bsCount." IBSC: ".$parserState->{initbsCount}."\n" if ($rubyDebug || $parseDebug);
+				    if (scalar(@parserStack) && !($bsCount - $parserState->{initbsCount})) {
 print STDERR "parserState: ENDOFSTATE\n" if ($parserStackDebug);
-					if ($parserState->{noInsert} || $oldOC) {
+					if ($parserState->{inrbraceargument}) {
+						print STDERR "parserState insertion skipped[RBRACE, INARG]\n" if ($parserStackDebug || $parserStateInsertDebug);
+						# $parserState->{newlineIsSemi} = 1; # @@@ THIS ISN'T RIGHT.
+					} elsif ($parserState->{noInsert} || $oldOC) {
 						print STDERR "parserState insertion skipped[RBRACE]\n" if ($parserStackDebug || $parserStateInsertDebug);
 					} elsif ($parserState->{hollow}) {
 						print STDERR "inserted parser state into tree [RBRACE]\n" if ($parserStateInsertDebug);
@@ -4127,7 +4454,7 @@ print STDERR "parserState: ENDOFSTATE\n" if ($parserStackDebug);
 						$part = "";
 						print STDERR "INMODULE -> 3\n" if ($localDebug || $moduleDebug);
 						$parserState->{INMODULE} = 3;
-						print STDERR "CONTINUE -> 0 [1a]\n" if ($parseDebug || $cppDebug || $macroDebug || $localDebug || $continueDebug);
+						print STDERR "CONTINUE -> 0 [1aMODULE]\n" if ($parseDebug || $cppDebug || $macroDebug || $localDebug || $continueDebug);
 						$parserState->{noInsert} = 0;
 						$continue = 0;
 						# print STDERR "AT END: REALPS IS ".$parserState->{REALPS}."\n" if ($parserStackDebug || $localDebug);
@@ -4136,13 +4463,18 @@ print STDERR "parserState: ENDOFSTATE\n" if ($parserStackDebug);
 
 # print STDERR "HERE\n";
 
-					if ($lang eq "php" || ($lang eq "C" && $sublang eq "IDL") || ($lang eq "java" && $sublang eq "java") || $ruby || ($lang eq "tcl")) {
+					if ($lang eq "php" || ($lang eq "C" && $sublang eq "IDL") || ($lang eq "java" && $sublang eq "java") || $ruby || ($lang eq "tcl") || ($lang eq "applescript")) {
 							# print STDERR "PHP OUT OF BRACES?: ".scalar(@braceStack)."\n";
 						if (scalar(@braceStack) == 1) {
 							# PHP, IDL, Ruby, TCL, and Java classes end at
 							# the brace.
-							print STDERR "CONTINUE -> 0 [1a]\n" if ($parseDebug || $cppDebug || $macroDebug || $localDebug || $continueDebug);
+							print STDERR "CONTINUE -> 0 [1aOutOfBraces]\n" if ($parseDebug || $cppDebug || $macroDebug || $localDebug || $continueDebug);
 							$continue = 0;
+						} elsif ($lang eq "applescript" && (scalar(@braceStack)-$parserState->{initbsCount}) == 1) {
+							# AppleScript allows nested classes and does not have a semicolon to
+							# indicate the point at which we should stop parsing a class.
+							print STDERR "Terminating nested class at newline.\n" if ($localDebug || $parseDebug || $asDebug); # @@@
+							$parserState->{declarationEndsAtNewLine} = 1;
 						}
 					}
 					if ($parserState->{noInsert} && scalar(@parserStack)) {
@@ -4157,12 +4489,12 @@ print STDERR "parserState: ENDOFSTATE\n" if ($parserStackDebug);
 						$parserState->{initbsCount} = scalar(@braceStack) - 1;
 					}
 					# $parserState->{onlyComments} = 1;
-				} else {
+				    } else {
 					print STDERR "NO CHANGE IN PARSER STATE STACK (nPARSERSTACK = ".scalar(@parserStack).", $bsCount != $parserState->{initbsCount})\n" if ($parseDebug || $parserStackDebug);
-				}
+				    }
 
-				print STDERR "Ruby stopcheck: ".scalar(@braceStack)." - ".$parserState->{initbsCount}."\n" if ($rubyDebug || $parseDebug);
-				if ((scalar(@braceStack)-$parserState->{initbsCount}) == 1) {
+				    print STDERR "Ruby stopcheck: ".scalar(@braceStack)." - ".$parserState->{initbsCount}."\n" if ($rubyDebug || $parseDebug);
+				    if ((scalar(@braceStack)-$parserState->{initbsCount}) == 1) {
 					# stop parameter parsing
 					if ($ruby) {
 						print STDERR "Ruby stopearly: ".scalar(@braceStack)." - ".$parserState->{initbsCount}."\n" if ($rubyDebug || $parseDebug);;
@@ -4185,14 +4517,15 @@ print STDERR "parserState: ENDOFSTATE\n" if ($parserStackDebug);
 					# } else {
 						# print STDERR "checkpoint SC: ".$parserState->{sodclass}."\n";
 					# }
-				} else {
+				    } else {
 					# start parameter parsing after this token
 					# grabbing end names for typedefs.
-					$parserState->{parsedParamParse} = 4;
+					$parserState->{parsedParamParse} = pop(@{$parserState->{parsedParamStateAtBrace}}); # 4;
+					$parsedParam = pop(@{$parserState->{parsedParamAtBrace}});
 					print STDERR "parsedParamParse -> $parserState->{parsedParamParse}"."[rbrace2]\n" if ($parmDebug);
-				}
+				    }
 
-				if (scalar(@{$parserState->{parsedParamList}})) {
+				    if (scalar(@{$parserState->{parsedParamList}})) {
 					foreach my $node (@{$parserState->{parsedParamList}}) {
 						$node =~ s/^\s*//so;
 						$node =~ s/\s*$//so;
@@ -4202,13 +4535,13 @@ print STDERR "parserState: ENDOFSTATE\n" if ($parserStackDebug);
 					}
 					@{$parserState->{parsedParamList}} = ();
 					print STDERR "parsedParamList pushed [3]\n" if ($parmDebug);
-				}
+				    }
 
-				print STDERR "rbrace\n" if ($localDebug);
+				    print STDERR "rbrace\n" if ($localDebug);
 
-				my $test = pop(@braceStack); pbs(@braceStack);
-				my $temp = pop(@parsedParamParseStack);
-				if ($temp) {
+				    my $test = pop(@braceStack); pbs(@braceStack);
+				    my $temp = pop(@parsedParamParseStack);
+				    if ($temp) {
 					if ($temp == 1) { $temp = 2; }
 					elsif ($temp == 3) { $temp = 4; }
 
@@ -4216,35 +4549,44 @@ print STDERR "parserState: ENDOFSTATE\n" if ($parserStackDebug);
 						warn("Changing PPP from ".$parserState->{parsedParamParse}." to $temp\n");
 					}
 					$parserState->{parsedParamParse} = $temp;
-				}
-				print STDERR "POPPED $test FROM BRACESTACK\n" if ($macroDebug || $braceDebug);
-				if (!$parserState->{seenBraces}) { # TREEDONE
-					$treeCur->addSibling($part, 0); $treeSkip = 1;
+				    }
+				    print STDERR "POPPED $test FROM BRACESTACK [5]\n" if ($macroDebug || $braceDebug);
+				    if (($HeaderDoc::includeFunctionContents || !($parserState->{seenBraces} || $trailingHide)) && (!$parserState->{inrbraceargument})) { # TREEDONE
+					warn("TSPOP FOR NOT SEEN BRACES\n") if ($parserStateInsertDebug || $treeDebug);
+					my $tempCur = $treeCur->addSibling($part, 0); $treeSkip = 1;
+					if ($HeaderDoc::includeFunctionContents && $reMark) {
+						$tempCur->{RE_STATE} = $reMark;
+					}
 					$treeCur = pop(@treeStack) || $treeTop;
-					$treeCur->parsedParamCopy(\@{$parserState->{parsedParamList}}, $lang, $sublang);
+					if (!($parserState->{seenBraces} || $trailingHide)) {
+						$treeCur->parsedParamCopy(\@{$parserState->{parsedParamList}}, $lang, $sublang);
+					}
 					$treeCur = $treeCur->lastSibling();
-					$treeCur->parsedParamCopy(\@{$parserState->{parsedParamList}}, $lang, $sublang);
+					if (!($parserState->{seenBraces} || $trailingHide)) {
+						$treeCur->parsedParamCopy(\@{$parserState->{parsedParamList}}, $lang, $sublang);
+					}
 					print STDERR "TSPOP [7]: now $treeCur\n" if ($tsDebug || $treeDebug);
 					bless($treeCur, "HeaderDoc::ParseTree");
-				}
-				if (!($test eq "$parseTokens{lbrace}") && (!length($parseTokens{structname}) || (!($test eq $parseTokens{structname}) && $parseTokens{structisbrace}))) {
+				    }
+				    if (!($test eq "$parseTokens{lbrace}") && (!length($parseTokens{structname}) || (!($test eq $parseTokens{structname}) && $parseTokens{structisbrace}))) {
 					warn("$fullpath:$inputCounter: warning: Braces do not match (top of brace stack\nis \"$test\").We may have a problem.\n");
 					warn("Declaration to date: $declaration$curline\n");
-				}
-				$curline = spacefix($curline, $part, $lastchar);
-				$parserState->{lastsymbol} = "";
-				$lastchar = $part;
+				    }
+				    $curline = spacefix($curline, $part, $lastchar);
+				    $parserState->{lastsymbol} = "";
+				    $lastchar = $part;
 
-				$parserState->{startOfDec} = 0;
-				print STDERR "startOfDec -> 0 [6]\n" if ($localDebug);
-				if ($curline !~ /\S/o) {
+				    $parserState->{startOfDec} = 0;
+				    print STDERR "startOfDec -> 0 [6]\n" if ($localDebug);
+				    if ($curline !~ /\S/o) {
 					# This is the first symbol on the line.
 					# adjust immediately
 					$prespace -= 4;
 					print STDERR "PS: $prespace immediate\n" if ($localDebug);
-				} else {
+				    } else {
 					$prespaceadjust -= 4;
 					print STDERR "PSA: $prespaceadjust\n" if ($localDebug);
+				    }
 				}
 			    }
 			    last SWITCH;
@@ -4304,8 +4646,11 @@ print STDERR "parserState: ENDOFSTATE\n" if ($parserStackDebug);
 				$parserState->{seenBraces} = 1;
 				my $temp = pop(@braceStack);
 				$parserState->{parsedParamParse} = pop(@parsedParamParseStack);
-				print STDERR "POPPED $temp FROM BRACESTACK\n" if ($macroDebug || $braceDebug);
-				$treeCur->addSibling($part, 0); $treeSkip = 1;
+				print STDERR "POPPED $temp FROM BRACESTACK [6]\n" if ($macroDebug || $braceDebug);
+				my $tempCur = $treeCur->addSibling($part, 0); $treeSkip = 1;
+				if ($HeaderDoc::includeFunctionContents && $reMark) {
+					$tempCur->{RE_STATE} = $reMark;
+				}
 				$treeCur = pop(@treeStack) || $treeTop;
 				$treeCur->parsedParamCopy(\@{$parserState->{parsedParamList}}, $lang, $sublang);
 				$treeCur = $treeCur->lastSibling();
@@ -4378,11 +4723,13 @@ print STDERR "parserState: ENDOFSTATE\n" if ($parserStackDebug);
 				$parserState->{pendingBracedParameters} = 1;
 			}
 
+			print STDERR "INCLASSCHECK AFTERNL: ".$parserState->{afterNL}."\n" if ($parseDebug);
+
 			my $localclasstype = $1;
 			if ($part =~ /^\@/) { $part =~ s/^\@//s; }
-			if (!(scalar(@braceStack)-$parserState->{initbsCount})) {
-			    if (!($parserState->{inString} || $parserState->{inComment} || $parserState->{inInlineComment} || $parserState->{inChar})) {
-				print STDERR "ITISACLASS\n" if ($localDebug);
+			if ((($lang eq "applescript") && $parserState->{afterNL}) || (($lang ne "applescript") && !(scalar(@braceStack)-$parserState->{initbsCount}))) {
+			    if (!($parserState->{inString} || $parserState->{inComment} || $parserState->{inInlineComment} || ($parserState->{inChar} && $lang ne "applescript"))) {
+				print STDERR "ITISACLASS\n" if ($localDebug || $classDebug);
 				if (!length($parserState->{sodclass}) && !$parserState->{inTypedef}) {
 					print STDERR "GOOD.\n" if ($localDebug);
 					$parserState->{inClass} = 1;
@@ -4424,7 +4771,7 @@ print STDERR "parserState: ENDOFSTATE\n" if ($parserStackDebug);
 						print STDERR "CLASS ($localclasstype) IS A BRACE.\n" if ($localDebug);
 						push(@parsedParamParseStack, $parserState->{parsedParamParse});
 						push(@braceStack, $localclasstype); pbs(@braceStack);
-						print STDERR "PUSHED $localclasstype ONTO BRACESTACK\n" if ($macroDebug || $braceDebug);
+						print STDERR "PUSHED $localclasstype ONTO BRACESTACK [6]\n" if ($macroDebug || $braceDebug);
 						$treeNest = 1;
 					if ($treeDebug) { print STDERR "TS TREENEST -> 1 [17]\n"; }
 					# } else {
@@ -4457,6 +4804,12 @@ print STDERR "parserState: ENDOFSTATE\n" if ($parserStackDebug);
 					# $macrore = macroRegexpFromList($parseTokens{macronames});
 					$macrore_pound = macroRegexpFromList($parseTokens{macronames}, 1);
 					$macrore_nopound = macroRegexpFromList($parseTokens{macronames}, 2);
+					$regexppattern = $parseTokens{regexppattern};
+					$singleregexppattern = $parseTokens{singleregexppattern};
+					$regexpfirstcharpattern = $parseTokens{regexpfirstcharpattern};
+					$regexpcharpattern = $parseTokens{regexpcharpattern};
+					$regexpAllowedAfter = $parseTokens{regexpAllowedAfter};
+					$TCLregexpcommand = $parseTokens{TCLregexpcommand};
 					print STDERR "ARP: $accessregexp\n" if ($localDebug);
 
 
@@ -4465,6 +4818,8 @@ print STDERR "parserState: ENDOFSTATE\n" if ($parserStackDebug);
 					($lang, $sublang) = getLangAndSublangFromClassType($localclasstype, $lang, $sublang);
 					$HeaderDoc::lang = $lang;
 					$HeaderDoc::sublang = $sublang;
+
+					# print STDERR "ELSE CASE: $lang $sublang\n";
 
 					# ($parseTokens{sotemplate}, $parseTokens{eotemplate}, $parseTokens{operator}, $parseTokens{soc}, $parseTokens{eoc}, $parseTokens{ilc}, $parseTokens{ilc_b}, $parseTokens{sofunction},
 						# $parseTokens{soprocedure}, $parseTokens{sopreproc}, $parseTokens{lbrace}, $parseTokens{rbrace}, $parseTokens{unionname}, $parseTokens{structname},
@@ -4486,11 +4841,19 @@ print STDERR "parserState: ENDOFSTATE\n" if ($parserStackDebug);
 					# $macrore = macroRegexpFromList($parseTokens{macronames});
 					$macrore_pound = macroRegexpFromList($parseTokens{macronames}, 1);
 					$macrore_nopound = macroRegexpFromList($parseTokens{macronames}, 2);
+					$regexppattern = $parseTokens{regexppattern};
+					$singleregexppattern = $parseTokens{singleregexppattern};
+					$regexpfirstcharpattern = $parseTokens{regexpfirstcharpattern};
+					$regexpcharpattern = $parseTokens{regexpcharpattern};
+					$regexpAllowedAfter = $parseTokens{regexpAllowedAfter};
+					$TCLregexpcommand = $parseTokens{TCLregexpcommand};
 					print STDERR "ARP: $accessregexp\n" if ($localDebug);
 
 
 			    		last SWITCH;
 				}
+			    } else {
+				print STDERR "STR: ".$parserState->{inString}." COM: ".$parserState->{inComment}." ILC: ".$parserState->{inInlineComment}." CHAR: ".$parserState->{inChar}." LANG: ".$lang."\n";
 			    }
 			}
 		};
@@ -4538,8 +4901,8 @@ print STDERR "parserState: ENDOFSTATE\n" if ($parserStackDebug);
 
 					push(@parsedParamParseStack, $parserState->{parsedParamParse});
                                 	push(@braceStack, $part); pbs(@braceStack);
-					print STDERR "PUSHED $part ONTO BRACESTACK\n" if ($macroDebug || $braceDebug);
-					if (!$parserState->{seenBraces}) { # TREEDONE
+					print STDERR "PUSHED $part ONTO BRACESTACK [7]\n" if ($macroDebug || $braceDebug);
+					if ($HeaderDoc::includeFunctionContents || !($parserState->{seenBraces} || $trailingHide)) { # TREEDONE
 						$treeNest = 1;
 					if ($treeDebug) { print STDERR "TS TREENEST -> 1 [18]\n"; }
 						# push(@treeStack, $treeCur);
@@ -4566,7 +4929,7 @@ print STDERR "parserState: ENDOFSTATE\n" if ($parserStackDebug);
 						print STDERR "simpleTypedef -> 2\n" if ($localDebug);
 						$parserState->{simpleTypedef} = 2;
 					}
-					# if (!$parserState->{seenBraces}) { # TREEDONE
+					# if ($HeaderDoc::includeFunctionContents || !$parserState->{seenBraces}) { # TREEDONE
 						# $treePopTwo++;
 						# $treeNest = 1;
 						# push(@treeStack, $treeCur);
@@ -4655,6 +5018,7 @@ print STDERR "sodname cleared ($parseTokens{typedefname})\n" if ($sodDebug);
 		# Punctuation handlers
 
 		($part =~ /;/o || ($parserState->{newlineIsSemi} && (!$parserState->isQuoted($lang, $sublang)) && $part =~ /[\n\r]/)) && do {
+			# semicolon handler.
 			print STDERR "SEMICOLON: CASE 39\n" if ($liteDebug);
 			    if (!($parserState->{inString} || $parserState->{inComment} || $parserState->{inInlineComment} || $parserState->{inChar})) {
 				if ($lang eq "shell") {
@@ -4663,6 +5027,9 @@ print STDERR "sodname cleared ($parseTokens{typedefname})\n" if ($sodDebug);
 					} elsif (!$parserState->{afterSemi}) {
 						$parserState->{afterSemi} = 1;
 					}
+				}
+				if ($parserState->{inTCLRegExpCommand}) {
+					$parserState->{inTCLRegExpCommand} = 0;
 				}
 				print STDERR "NOT IN STRING, CHAR, COMMENT, etc.\n" if ($localDebug);
 				if ($parserState->{parsedParamParse}) {
@@ -4704,6 +5071,7 @@ print STDERR "sodname cleared ($parseTokens{typedefname})\n" if ($sodDebug);
 				    my $bsCount = scalar(@braceStack)-$parserState->{initbsCount};
 
 				    print STDERR "INHERE BSC $bsCount\n" if ($rubyDebug || $parseDebug);
+					# print STDERR "KRC: ".$parserState->{kr_c_function}."\n";
 
 				    if (!$bsCount && !$parserState->{kr_c_function}) {
 					if ($parserState->{startOfDec} == 2 && !$pascal) {
@@ -4722,6 +5090,9 @@ print STDERR "sodname cleared ($parseTokens{typedefname})\n" if ($sodDebug);
 				    if (!$bsCount) {
 print STDERR "HERE BSC: $bsCount\n" if ($rubyDebug || $parseDebug);
 					$treeCur = $treeCur->addSibling($part); $treepart = " "; # $treeSkip = 1;
+					if ($HeaderDoc::includeFunctionContents && $reMark) {
+						$treeCur->{RE_STATE} = $reMark;
+					}
 if (0) {
 					$treeCur = pop(@treeStack) || $treeTop;
 					$treeCur->parsedParamCopy(\@{$parserState->{parsedParamList}}, $lang, $sublang);
@@ -4857,6 +5228,7 @@ if (0) {
 				}; # end if
 			}; # end do
 		($part =~ /[*^]/) && do {
+		    print STDERR "PUNCTUATION: CASE 41A\n" if ($liteDebug);
 				if ($part =~ /[*]/) { $parserState->{curvarstars} .= $part; }
 				if ($lastnspart eq "(" &&  # ")"
 					!($parserState->{inString} || $parserState->{inComment} || $parserState->{inInlineComment} || $parserState->{inChar}) &&
@@ -5143,7 +5515,7 @@ if (0) {
 
 	    # Note: don't check tempInIf here.  We want the open brace included because
 	    # the close brace is included.
-	    if ($parserState->{seenBraces} && ($parserState->{INIF} != 1)) {
+	    if (($parserState->{seenBraces} || $trailingHide) && !$HeaderDoc::includeFunctionContents && ($parserState->{INIF} != 1)) {
 		# print STDERR "SEENBRACES. TP: $treepart PT: $part\n";
 		if ($treepart) {
 			print STDERR "ADDED \"$treepart\" to function contents\n" if ($functionContentsDebug);
@@ -5153,7 +5525,7 @@ if (0) {
 			$parserState->{functionContents} .= $part;
 		}
 		# print STDERR "SEENBRACES. FC: ".$parserState->{functionContents}."\n";
-	    } elsif ($parserState->{seenBraces}) {
+	    } elsif (($parserState->{seenBraces} || $trailingHide) && !$HeaderDoc::includeFunctionContents) {
 			print STDERR "NOT ADDING \"$part\" to function contents (INIF: ".$parserState->{INIF}." TEMPINIF: $tempInIf\n" if ($functionContentsDebug);
 	    } else {
 			print STDERR "NOT ADDING \"$part\" to function contents (!seenBraces)\n" if ($functionContentsDebug);
@@ -5190,7 +5562,7 @@ if (0) {
 	    print STDERR "TN: $treeNest TS: $treeSkip nTS: ".scalar(@treeStack)."\n" if ($tsDebug || $parserStateInsertDebug);
 	    print STDERR "sethollow: $sethollow\n" if ($parserStateInsertDebug);
 	    if (!$treeSkip) {
-		if (!$parserState->{seenBraces}) { # TREEDONE
+		if ($HeaderDoc::includeFunctionContents || !($parserState->{seenBraces} || $trailingHide)) { # TREEDONE
 			if ($treeNest != 2) {
 				# If we really want to skip and nest, set treeNest to 2.
 				if (length($treepart)) {
@@ -5199,6 +5571,9 @@ if (0) {
 						# print STDERR "SHORT\n";
 					} else {
 						$treeCur = $treeCur->addSibling($treepart, $hide);
+						if ($HeaderDoc::includeFunctionContents && $reMark) {
+							$treeCur->{RE_STATE} = $reMark;
+						}
 					}
 					$treepart = "";
 				} else {
@@ -5207,6 +5582,9 @@ if (0) {
 						# print STDERR "SHORT\n";
 					} else {
 						$treeCur = $treeCur->addSibling($part, $hide);
+						if ($HeaderDoc::includeFunctionContents && $reMark) {
+							$treeCur->{RE_STATE} = $reMark;
+						}
 					}
 				}
 				bless($treeCur, "HeaderDoc::ParseTree");
@@ -5264,6 +5642,8 @@ if (0) {
 		print STDERR "REPLACING RETURNTYPE[3]: NOW \"$parserState->{returntype}\".\n" if ($retDebug);
 	    }
 
+	    print STDERR "AT MIDPOINT, TREECUR IS $treeCur (".$treeCur->token().")\n" if ($localDebug || $parserStateInsertDebug);
+
 	    # From here down is... magic.  This is where we figure out how
 	    # to handle parsed parameters, K&R C types, and in general,
 	    # determine whether we've received a complete declaration or not.
@@ -5294,7 +5674,7 @@ if (0) {
 		}
 		$ppSkipOneToken = 0;
 		print STDERR "MIDPOINT CL: $curline\nDEC:$declaration\nSCR: \"$scratch\"\n" if ($localDebug);
-	        if (!$parserState->{seenBraces}) {
+	        if ($HeaderDoc::includeFunctionContents || !($parserState->{seenBraces} || $trailingHide)) {
 		    # Add to current line (but don't put inline function/macro
 		    # declarations in.
 
@@ -5401,9 +5781,9 @@ if (0) {
 
 	        print STDERR "CURLINE IS \"$curline\".\n" if ($localDebug);
 	        my $bsCount = scalar(@braceStack);
-		print STDERR "ENDTEST: $bsCount \"$parserState->{lastsymbol}\"\n" if ($localDebug);
-		print STDERR "KRC: $parserState->{kr_c_function} SB: $parserState->{seenBraces}\n" if ($localDebug);
-		print STDERR "DEANL: ".$parserState->{declarationEndsAtNewLine}." PART: \"$treepart\"\n" if ($parseDebug || $asDebug);
+		print STDERR "ENDTEST: $bsCount \"$parserState->{lastsymbol}\"\n" if ($localDebug || $continueDebug);
+		print STDERR "KRC: $parserState->{kr_c_function} SB: $parserState->{seenBraces}\n" if ($localDebug || $continueDebug);
+		print STDERR "DEANL: ".$parserState->{declarationEndsAtNewLine}." PART: \"$treepart\"\n" if ($parseDebug || $asDebug || $continueDebug);
 	        if (!($bsCount - $parserState->{initbsCount}) && ($parserState->{lastsymbol} =~ /;\s*$/o || ($parserState->{declarationEndsAtNewLine} && $partIsNL))) {
 		    if ($parserState->{declarationEndsAtNewLine} && $partIsNL) {
 			print STDERR "CREATING NEW PARSER STATE NOW.\n" if ($parseDebug || $asDebug);
@@ -5411,7 +5791,7 @@ if (0) {
 		    }
 		    # print STDERR "DPA\n";
 		    if ((!$parserState->{kr_c_function} || $parserState->{seenBraces}) && !$parserState->{inMacro}) {
-		        print STDERR "DPB\n" if ($parserStateInsertDebug);
+		        print STDERR "DPB\n" if ($parserStateInsertDebug || $continueDebug);
 			if (!scalar(@parserStack)) {
 			    $continue = 0;
 			    print STDERR "CONTINUE -> 0 [3]\n" if ($parseDebug || $cppDebug || $macroDebug || $localDebug || $continueDebug);
@@ -5454,12 +5834,12 @@ if (0) {
 	        }
 
 		# print STDERR "BSCOUNT: $bsCount IBS: $parserState->{initbsCount}\n";
-	        if (!($bsCount - $parserState->{initbsCount}) && $parserState->{seenBraces} && ($parserState->{sodclass} eq "function" || $parserState->{inOperator}) && 
+	        if (!($bsCount - $parserState->{initbsCount}) && ($parserState->{seenBraces} || $trailingHide) && ($parserState->{sodclass} eq "function" || $parserState->{inOperator}) &&
 		    ($nextpart ne ";")) {
 			# Function declarations end at the close curly brace.
 			# No ';' necessary (though we'll eat it if it's there.
 
-			if ($parserState->{treePopTwo} || $ruby) {
+			if ($parserState->{treePopTwo} || $ruby || $parseTokens{functionisbrace}) {
 				# Fix nesting.
 				# print STDERR "LASTTREENODE -> $treeCur (".$treeCur->token().")\n";
 				while ($parserState->{treePopTwo}--) {
@@ -5470,10 +5850,13 @@ if (0) {
 					print STDERR "TSPOP [13]: now $treeCur\n" if ($tsDebug || $treeDebug);
 					bless($treeCur, "HeaderDoc::ParseTree");
 				}
-				if ($ruby) {
+				if ($ruby || $parseTokens{functionisbrace}) {
 					$treeCur = $treeCur->addSibling("", 0);
 				} else {
 					$treeCur = $treeCur->addSibling(";", 0);
+				}
+				if ($HeaderDoc::includeFunctionContents && $reMark) {
+					$treeCur->{RE_STATE} = $reMark;
 				}
 				print STDERR "parser state lastTreeNode reset [treePopTwo]\n" if ($parserStateInsertDebug);
 				print STDERR "Last tree node set to $treeCur [8]\n" if ($parserStateInsertDebug);
@@ -5485,6 +5868,8 @@ if (0) {
 			if (!scalar(@parserStack) && !$parserState->{INIF} && !$tempInIf) {
 				$continue = 0;
 				print STDERR "CONTINUE -> 0 [4]\n" if ($parseDebug || $cppDebug || $macroDebug || $localDebug || $continueDebug);
+			} elsif ($parserState->{inrbraceargument}) {
+				print STDERR "parserState insertion skipped[inrbraceargument]\n" if ($parserStackDebug);
 			} elsif (!$parserState->{onlyComments} && !$parserState->{INIF} && !$tempInIf) {
 				# Process entry here
 				if ($parserState->{noInsert}) {
@@ -5493,7 +5878,7 @@ if (0) {
 					my $treeRef = $parserState->{hollow};
 
 					print STDERR "inserted parser state into tree [rbrace]\nEOD: $treeCur\n" if ($parserStateInsertDebug);
-					print STDERR "Last tree node set to $treeCur [9]\n" if ($parserStateInsertDebug);
+					print STDERR "Last tree node set to $treeCur [9] (token: \"".$treeCur->token()."\")\n" if ($parserStateInsertDebug);
 					$parserState->{lastTreeNode} = $treeCur;
 					$treeRef->addRawParsedParams(\@{$parserState->{parsedParamList}});
 					$treeRef->parserState($parserState);
@@ -5578,9 +5963,33 @@ if (0) {
 
 	    print STDERR "OOGABOOGA\n" if ($parserStackDebug);
 	    if ($pushParserStateAfterToken == 1) {
+			if ($parserState->{inClass}) { configureAccessControlStateForClass($parserState); }
 			print STDERR "parserState pushed onto stack[token]\n" if ($parserStackDebug);
 			print STDERR "Last tree node set to $treeCur [11]\n" if ($parserStateInsertDebug);
 			$parserState->{lastTreeNode} = $treeCur;
+			if ($lang eq "applescript") {
+				# AppleScript needs a little help because functions can contain other things.
+				if (!$parserState->{lastDisplayNode}) {
+					$parserState->{lastDisplayNode} = $treeCur;
+				}
+				if (!$treeTop->{lastDisplayNode}) {
+					$treeTop->{lastDisplayNode} = $treeCur;
+				}
+				if (!$parserState->{lastDisplayNode}) {
+					$parserState->{lastDisplayNode} = $treeCur;
+				}
+				if (!$treeTop->{lastDisplayNode}) {
+					$treeTop->{lastDisplayNode} = $treeCur;
+				}
+
+				# print STDERR "CUR: $treeCur\n";
+				# print STDERR "FOR PS: $parserState\n";
+				# $treeCur->dbprint();
+				# print STDERR "TOP:\n";
+				# $treeTop->dbprint();
+				# print STDERR "SET TN: $treeTop\n";
+				# print STDERR "TTLDN: ".$treeTop->{lastDisplayNode}."\n";
+			}
 			$curline = "";
 			$parserState->{storeDec} = $declaration;
 			$parserState->{freezereturn} = 1;
@@ -5596,6 +6005,8 @@ if (0) {
 		if ($part =~ /\w/) {
 			print STDERR "parserState pushed onto stack[word]\n" if ($parserStackDebug);
 			print STDERR "Last tree node set to $treeCur [12]\n" if ($parserStateInsertDebug);
+
+			if ($parserState->{inClass}) { configureAccessControlStateForClass($parserState); }
 			$parserState->{lastTreeNode} = $treeCur;
 			$curline = "";
 			$parserState->{storeDec} = $declaration;
@@ -5617,12 +6028,14 @@ if (0) {
 
 		# if (casecmp($part, $parseTokens{lbrace}, $case_sensitive)) 
 
-		print STDERR "check: ".$parserState->isLeftBrace($part, $lang, $parseTokens{lbrace}, $parseTokens{lbraceunconditionalre}, $parseTokens{lbraceconditionalre}, $parseTokens{classisbrace}, $parseTokens{functionisbrace}, $case_sensitive, scalar(@braceStack))."\n" if ($rubyDebug || $parseDebug);
+		print STDERR "check: ".$parserState->isLeftBrace($part, $lang, \%parseTokens, $case_sensitive, scalar(@braceStack))."\n" if ($rubyDebug || $parseDebug || $HeaderDoc::AppleScriptDebug);
 
-		if ($parserState->isLeftBrace($part, $lang, $parseTokens{lbrace}, $parseTokens{lbraceunconditionalre}, $parseTokens{lbraceconditionalre},
-		    $parseTokens{classisbrace}, $parseTokens{functionisbrace}, $case_sensitive, scalar(@braceStack))) {
+		if ($parserState->isLeftBrace($part, $lang, \%parseTokens, $case_sensitive, scalar(@braceStack))) {
 			if ($part =~ /[\n\r]/) { $parserState->{inRubyClass} = 2; }
 			$parserState->{ISFORWARDDECLARATION} = 0;
+
+			if ($parserState->{inClass}) { configureAccessControlStateForClass($parserState); }
+
 			print STDERR "parserState pushed onto stack[brace]\n" if ($parserStackDebug);
 			# if ($pushParserStateAtBrace == 2) {
 				# print STDERR "NOINSERT parserState: $parserState\n" if ($parserStackDebug);
@@ -5661,7 +6074,7 @@ if (0) {
 			if ($tok =~ /\S/) {
 				print STDERR "parserState: PS IS $parserState\n" if ($parserStackDebug);
 				print STDERR "parserState: NOT WHITESPACE : ".$parserState->{hollow}." -> $treeCur\n" if ($parserStackDebug);
-				if (!casecmp($tok, $parseTokens{rbrace}, $case_sensitive) && $part !~ /\)/) {
+				if (!$parserState->isRightBrace($tok, $lang, \%parseTokens, $case_sensitive) && $part !~ /\)/) {
 					# $parserState->{hollow} = $treeCur;
 					$parserState->setHollowWithLineNumbers($treeCur, $fileoffset, $inputCounter);
 					# $HeaderDoc::curParserState = $parserState;
@@ -5683,7 +6096,7 @@ if (0) {
 			if ($tok =~ /\S/) {
 				print STDERR "parserState: PS IS $parserState\n" if ($parserStackDebug);
 				print STDERR "parserState: NOT WHITESPACE : ".$parserState->{hollow}." -> $treeCur\n" if ($parserStackDebug);
-				if (!casecmp($tok, $parseTokens{rbrace}, $case_sensitive) && $part !~ /\)/) {
+				if (!$parserState->isRightBrace($tok, $lang, \%parseTokens, $case_sensitive) && $part !~ /\)/) {
 					$parserState->setHollowWithLineNumbers($treeCur, $fileoffset, $inputCounter);
 					# $HeaderDoc::curParserState = $parserState;
 					print STDERR "parserState: WILL INSERT STATE $parserState (HOLLOW-AUTO-2) AT TOKEN \"$part\"/\"".$treeCur->token()."\"\n" if ($parserStackDebug);
@@ -5921,6 +6334,7 @@ sub blockParseReturnState
     my $nameObjDumpDebug = 0;
 
 # $forcedebug = 1;
+    if ($forcedebug) { $parserState->dbprint(); }
     if ($forcedebug) { $treeTop->dbprint(); }
     $forcedebug = $forcedebug || $HeaderDoc::fileDebug;
 
@@ -5995,6 +6409,10 @@ if ($forcedebug) { print STDERR "FD\n"; }
 	$sodtype = join(",", @{$parserState->{pplStack}});
 	$parserState->{classtype} = "class";
 	print "SETTING sodtype TO $sodtype\n" if ($forcedebug);
+    }
+    if ($lang eq "applescript" && $parserState->{sodclass} eq "class") {
+	$sodclass = "script";
+	$parserState->{sodclass} = "script";
     }
 
     # AppleScript supports multi-word names, but does not support
@@ -6531,7 +6949,7 @@ print STDERR "SN: \"$sodname\"\nST: \"$sodtype\"\nSC: \"$sodclass\"\n" if ($loca
 
 print STDERR "TYPELIST WAS \"$typelist\"\n" if ($localDebug);;
 # warn("left blockParse (macro)\n");
-# print STDERR "NumPPs: ".scalar(@parsedParamList)."\n";
+print STDERR "NumPPs: ".scalar(@parsedParamList)."\n" if ($localDebug);
 
 # $treeTop->printTree();
 
@@ -6798,7 +7216,12 @@ print STDERR "TL: \"$typelist\".\n" if ($localDebug || $listDebug);
 print STDERR "PT: \"$posstypes\"\n" if ($localDebug || $listDebug);
 print STDERR "SN: \"$sodname\"\nST: \"$sodtype\"\nSC: \"$sodclass\"\n" if ($localDebug || $sodDebug);
 
-    $availability = mergeComplexAvailability($availability, $parserState->{availabilityNodesArray});
+    if ($typelist !~ /\#define/) {
+	# Availability is meaningless for a macro, and worse, macros can be used to define new
+	# availability macros, which would cause this to just plain misbehave.
+
+	$availability = mergeComplexAvailability($availability, $parserState->{availabilityNodesArray});
+    }
 
 
     print STDERR "SUBPARSE: $subparse NAME: $namelist TTIC: ".$treeTop->{INPUTCOUNTER}." TTBO: ".$treeTop->{BLOCKOFFSET}."\n" if ($subparseDebug);
@@ -6894,9 +7317,30 @@ print STDERR "SN: \"$sodname\"\nST: \"$sodtype\"\nSC: \"$sodclass\"\n" if ($loca
 	
     }
 
+    # print STDERR "SODCLASS: $sodclass SODNAME: $sodname SODTYPE: $sodtype LANG: $sublang\n";
+
     my $memberOfClass = "";
+    my $origsodname = $sodname;
     if ($sodclass eq "function" && $parserState->{isConstructor} && $lang eq "tcl") {
 	$memberOfClass = $sodname;
+	print STDERR "MEMBER OF CLASS: $memberOfClass\n" if ($localDebug || $forcedebug);
+    } elsif ($sublang eq "javascript" && $sodclass eq "variable" && $sodname =~ s/^(\w+(?:\.\w+)*)\s*\.\s*prototype\s*\.\s*//s) {
+	my $headerobj = $HeaderDoc::headerObject;
+	my $possible_class = $1;
+	my $temp = $headerobj->findClass($possible_class);
+
+    print STDERR "Checking for class \"$possible_class\"\n" if ($localDebug || $forcedebug);
+
+	# Don't throw away the class part unless we've actually seen this class.
+	if ($temp) {
+		$memberOfClass = $possible_class;
+		print STDERR "MEMBER OF CLASS: $memberOfClass\n" if ($localDebug || $forcedebug);
+		changeAllMatching(\@nameObjects, "NAME", "$origsodname", "NAME", "$sodname", 0);
+		changeAllMatching(\@nameObjects, "TYPE", "variable", "TYPE", "function", 0);
+		changeAllMatching(\@nameObjects, "TYPE", "variable", "POSSTYPES", "function constant variable", 0);
+	} else {
+		$sodname = $origsodname;
+	}
     } elsif ($sodclass eq "function" && $sodtype =~ /(\w+)\s*::\s*$/) {
 	$memberOfClass = $1;
 	print STDERR "MEMBER OF CLASS: $memberOfClass\n" if ($localDebug || $forcedebug);
@@ -6915,6 +7359,14 @@ print STDERR "SN: \"$sodname\"\nST: \"$sodtype\"\nSC: \"$sodclass\"\n" if ($loca
 
     changeAllMatching(\@nameObjects, "TYPE", "constant", "POSSTYPES", "constant variable", 0);
     changeAllMatching(\@nameObjects, "TYPE", "variable", "POSSTYPES", "constant variable", 0);
+
+    if ($sublang eq "javascript" && $sodclass eq "function") {
+        $posstypes = "function method class";
+	    changeAll(\@nameObjects, "POSSTYPES", $posstypes, 0); # may be no-op.
+    } elsif ($lang eq "applescript" && $sodclass eq "function") {
+        $posstypes = "function method ".$parserState->{classtype};
+	    changeAll(\@nameObjects, "POSSTYPES", $posstypes, 0); # may be no-op.
+    }
 
 	# print STDERR "ATEND PS $parserState HAS ARGS: ".$parserState->{cppMacroHasArgs}."\n";
 
@@ -7243,18 +7695,18 @@ sub defParmParse
 	if ($token =~ /[\(\[]/o) {
 		print STDERR "open paren/bracket - $token\n" if ($localDebug);
 		push(@braceStack, $token);
-		print STDERR "PUSHED $token ONTO BRACESTACK\n" if ($braceDebug);
+		print STDERR "PUSHED $token ONTO BRACESTACK [8]\n" if ($braceDebug);
 	} elsif ($token =~ /\)/o) {
 		print STDERR "close paren\n" if ($localDebug);
 		my $top = pop(@braceStack);
-		print STDERR "POPPED $top FROM BRACESTACK\n" if ($braceDebug);
+		print STDERR "POPPED $top FROM BRACESTACK [7]\n" if ($braceDebug);
 		if ($top !~ /\(/o) {
 			warn("$fullpath:$inputCounter: warning: Parentheses do not match (macro).\nWe may have a problem.\n");
 		}
 	} elsif ($token =~ /\]/o) {
 		print STDERR "close bracket\n" if ($localDebug);
 		my $top = pop(@braceStack);
-		print STDERR "POPPED $top FROM BRACESTACK\n" if ($braceDebug);
+		print STDERR "POPPED $top FROM BRACESTACK [8]\n" if ($braceDebug);
 		if ($top !~ /\[/o) {
 			warn("$fullpath:$inputCounter: warning: Braces do not match (macro).\nWe may have a problem.\n");
 		}
@@ -7314,6 +7766,8 @@ sub ignore
 	}
 	return $def;
     }
+    my $isa = isStandardAvailability($part);
+    if ($isa) { return $isa; }
 
     if ($ignorelist{$part}) {
 	    print STDERR "IGNORING $part\n" if ($localDebug);
@@ -8811,6 +9265,18 @@ print STDERR "NC: $newcount\n" if ($localDebug);
 				warn("NL: \"$namelist\"\n");
 				warn("PT: \"$posstypes\"\n");
 			}
+		} elsif ($HeaderDoc::ignore_apiowner_names == 2 && length($outername) && !$curObj->isBlock) {
+			if ($localDebug || $nameDebug) {
+				print STDERR "CURNAME CHANGED FROM $curname -> $outername\n";
+				print STDERR "CURNAME_EXTENDED CHANGED FROM $curname_extended -> $outername\n";
+			}
+			$curname = $outername;
+			$curname_extended = $outername;
+		}
+		if ($localDebug || $nameDebug) {
+			print STDERR "CURNAME: $curname\n";
+			print STDERR "OUTERNAME: $outername\n";
+			print STDERR "IGNORE: ".$HeaderDoc::ignore_apiowner_names."\n";
 		}
 
 		if ($outername eq "") {
@@ -9044,11 +9510,12 @@ print STDERR "NC: $newcount\n" if ($localDebug);
 			# $curname_inserted = 1;
 			my $newcurObj;
 			my $typestring = $curtype;
+			my $ncdeclaration = $parseTree->textTreeNC($lang, $sublang, 1);
 			($newcurObj, $classType, $varIsConstant) = objForType( $curObj, $parseTokens{typedefname}, $typestring,
-					$posstypes, $outertype, $curtype, $classType, $classKeyword, $declaration,
+					$posstypes, $outertype, $curtype, $classType, $classKeyword, $ncdeclaration,
 					\@fields, $functionGroup, $varIsConstant, $blockmode, $inClass, $inInterface,
 					$inTypedef, $inStruct, $fullpath, $inputCounter, $blockOffset, $lang, $sublang, 0, $functionContents,
-					$apiOwner, $subparseInputCounter, $subparseBlockOffset, $extendsClass, $implementsClass, 1);
+					$apiOwner, $subparseInputCounter, $subparseBlockOffset, $extendsClass, $implementsClass, 1, \%parseTokens);
 			if ($mustLockDiscussion) {
 				$curObj->prepareDiscussionForTemporary();
 			}
@@ -9498,12 +9965,13 @@ print STDERR "setting curtype to UNKNOWN\n" if ($localDebug);
 				print STDERR "BAILFAST[1]: AT END IC: $inputCounter\n" if ($HeaderDoc::inputCounterDebug);
 				last;
 			    }
+			    my $ncdeclaration = $parseTree->textTreeNC($lang, $sublang, 1);
 			    ($extra, $classType, $varIsConstant) = objForType( $curObj, $parseTokens{typedefname}, $typestring,
-					$posstypes, $outertype, $curtype, $classType, $classKeyword, $declaration,
+					$posstypes, $outertype, $curtype, $classType, $classKeyword, $ncdeclaration,
 					\@fields, $functionGroup, $varIsConstant, $blockmode, $inClass, $inInterface,
 					$inTypedef, $inStruct, $fullpath, $inputCounter, $blockOffset, $lang, $sublang, $outerLocalDebug,
 					$functionContents, $apiOwner, $subparseInputCounter, $subparseBlockOffset,
-					$extendsClass, $implementsClass, 0);
+					$extendsClass, $implementsClass, 0, \%parseTokens);
 
 			print "EXTRA ON RETURN IS $extra\n" if ($nameDebug || $nameObjDebug);
 			}
@@ -10037,8 +10505,13 @@ print STDERR "setting curtype to UNKNOWN\n" if ($localDebug);
 				# print STDERR "ITD: $inTypedef\n";
 				print STDERR "B8X blockmode=$blockmode ts=$typestring\n" if ($localDebug || $hangDebug);
 				my $typedefname = $parseTokens{typedefname};
+				my $classregexp = $parseTokens{classregexp};
+				my $moduleregexp = $parseTokens{moduleregexp};
 
-				if (($typestring =~ /^(class|\@class|\@interface|\@implementation|\@protocol|interface|module|namespace|package)/ || $inClass) && !$inTypedef) {
+				# if (($typestring =~ /^(class|\@class|\@interface|\@implementation|\@protocol|interface|module|namespace|package)/ || $inClass) && !$inTypedef)
+				if (((length($classregexp) && $typestring =~ /$classregexp/) ||
+				     (length($moduleregexp) && $typestring =~ /$moduleregexp/) || $inClass) &&
+				    !$inTypedef) {
 					print STDERR "ITSACLASS! ($extra->name)\n" if ($localDebug);
 					$extra->declaration($declaration);
 					$extra->declarationInHTML($declaration);
@@ -10047,7 +10520,8 @@ print STDERR "setting curtype to UNKNOWN\n" if ($localDebug);
 					    # my $localDebug = 1;
 						print STDERR "ADDING \"".$extra->name."\" TO CLASSES/PROTOCOLS/*\n" if ($localDebug);
 					print STDERR "RAWDEC: $declaration\n" if ($localDebug);
-						$classType = classTypeFromFieldAndBPinfo($classKeyword, $typestring." ".$posstypes, $declaration, $fullpath, $inputCounter+$blockOffset, $sublang);
+						my $ncdeclaration = $parseTree->textTreeNC($lang, $sublang, 1);
+						$classType = classTypeFromFieldAndBPinfo($classKeyword, $typestring." ".$posstypes, $ncdeclaration, $fullpath, $inputCounter+$blockOffset, $sublang);
 						# print STDERR "CLASSTYPE: $classType\n";
 						if ($classType eq "intf") {
 							push (@classObjects, $extra);
@@ -10446,20 +10920,31 @@ sub objForType
 	my $extendsClass = shift;         # IN
 	my $implementsClass = shift;      # IN
 	my $alwaysProcessComment = shift; # IN
+	my $parseTokensRef = shift;          # IN
 	my $parserState = shift;          # IN
 
 	my $extra = undef;                # OUT
 	my $localDebug = 0;
+
+	my %parseTokens = %{$parseTokensRef};
 
 	my $filename = basename($fullpath);
 
 	print STDERR "FOR DECLARATION $declaration\n" if ($localDebug);
 	# printFields($fieldref);
 
+	my $classregexp = $parseTokens{classregexp};
+	my $moduleregexp = $parseTokens{moduleregexp};
+	# print STDERR "CHECK: $classregexp\n";
+
 	# print STDERR "CO: $curObj HASPC: ".$curObj->{HASPROCESSEDCOMMENT}." CURTYPE: $curtype\n";
 
+	# print "TYPESTRING \"$typestring\" OUTERTYPE: \"$outertype\"\n";
+
 			    if ($typestring eq $outertype || !$HeaderDoc::outerNamesOnly) {
-				if (($typestring =~ /^(class|\@class|\@interface|\@implementation|\@protocol|interface|module|namespace|package)/ || $inClass) && !$inTypedef && !$inStruct) {
+				# $typestring =~ /^(class|\@class|\@interface|\@implementation|\@protocol|interface|module|namespace|package)/
+				if (((length($classregexp) && $typestring =~ /$classregexp/) ||
+				     (length($moduleregexp) && $typestring =~ /$moduleregexp/) || $inClass) && !$inTypedef && !$inStruct) {
                                         print STDERR "blockParse returned class\n" if ($localDebug);
 					print STDERR "RAWDEC: $declaration\n" if ($localDebug && $outerLocalDebug);
 					$classType = classTypeFromFieldAndBPinfo($classKeyword, $typestring." ".$posstypes, $declaration, $fullpath, $inputCounter+$blockOffset, $sublang);
@@ -10560,7 +11045,7 @@ sub objForType
 						# $headerObject->addToClasses($extra);
 					# }
 
-				} elsif (($typestring =~ /^$typedefname/ && length($typedefname)) || $typestring =~ /^(class|\@class|\@interface|\@implementation|\@protocol)/) {
+				} elsif (($typestring =~ /^$typedefname/ && length($typedefname)) || ($typestring =~ /$classregexp/ && length($classregexp))) {
 					print STDERR "blockParse returned $typedefname\n" if ($localDebug);
 					if ($localDebug) {
 						foreach my $field (@{$fieldref}) {
@@ -10910,7 +11395,7 @@ sub cpp_add($$)
 
     $string =~ s/^\/\*.*?\*\///s;
 
-    # print STDERR "IN cpp_add: ADDING  \"$string\"\n";
+    print STDERR "IN cpp_add: ADDING  \"$string\"\n" if ($cppDebug || $cppAddDebug);
 
     return cpp_add_string($string, $dropdeclaration);
 }
@@ -10932,8 +11417,8 @@ sub cpp_add_string($$)
     my $slstring = $string;
     $slstring =~ s/\\\n/ /sg;
 
-    print STDERR "cpp_add: STRING WAS $string\n" if ($cppDebug || $localDebug || $cppDebugFromToken);
-    print STDERR "SLSTRING: $slstring\n" if ($localDebug || $cppDebug);
+    print STDERR "cpp_add: STRING WAS $string\n" if ($cppDebug || $localDebug || $cppDebugFromToken || $cppAddDebug);
+    print STDERR "SLSTRING: $slstring\n" if ($localDebug || $cppDebug || $cppAddDebug);
 
     # if ($slstring =~ s/^\s*#define\s+(\w+)\(//s) {
     if ($dropdeclaration && $slstring =~ s/^\s*#define\s+(\w+)(\s|$)//s) {
@@ -11141,9 +11626,9 @@ sub cpp_preprocess
 
     my $count = 0;
     if ($HeaderDoc::enable_cpp > 0) {
-# print STDERR "CPP ENABLE\n";
+print STDERR "CPP ENABLE\n" if ($cppDebug > 1);
       foreach my $hashhashref (@HeaderDoc::cppHashList) {
-# print STDERR "HASHREFCHECK\n";
+print STDERR "HASHREFCHECK\n" if ($cppDebug > 1);
 	my $hashref = $hashhashref->{HASHREF};
 	print STDERR "HASHREF: $hashref\n" if ($cppDebug);
 	if (!$hashref) {
@@ -11178,6 +11663,8 @@ sub cpp_preprocess
 	print STDERR "HASARGS: $hasargs\n" if ($cppDebug);
 	return ($altpart, $hasargs, $CPP_ARG_HASH{$part});
       }
+    } else {
+	print STDERR "C preprocessing is disabled.\n" if ($cppDebug);
     }
 
     # If we got here, either CPP is disabled or we didn't find anything.
@@ -11727,6 +12214,35 @@ sub cppHashMerge
     return ($hashret, $arghashret, $root, $curhashobj);
 }
 
+# /*!
+#     @abstract
+#         Configures the access control state and optional/required
+#         state for methods and variables within a class based on
+#         the current language and class type.
+#  */
+sub configureAccessControlStateForClass
+{
+    my $parserState = shift;
+
+    my $lang = $parserState->{lang};
+
+    if ($lang eq "php") {
+		$HeaderDoc::AccessControlState = "public";
+    } elsif ($lang eq "java") {
+		$HeaderDoc::AccessControlState = "package-private";
+    } elsif ($lang eq "C") {
+	if ($parserState->{classIsObjC} || ($parserState->{sublang} eq "IDL" && $HeaderDoc::idl_language eq "occ")) {
+		$HeaderDoc::AccessControlState = "private";
+		if ($parserState->{inProtocol}) {
+			$HeaderDoc::OptionalOrRequired = "\@required"; # The default in Objective C
+		}
+        } elsif ($parserState->{sublang} eq "IDL" && ($HeaderDoc::idl_language eq "idl" || $HeaderDoc::idl_language eq "javascript" || $HeaderDoc::idl_language eq "js")) {
+		$HeaderDoc::AccessControlState = "public";
+	} else {
+		$HeaderDoc::AccessControlState = "protected";
+	}
+    }
+}
 
 1;
 

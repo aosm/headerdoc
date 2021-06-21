@@ -9,7 +9,7 @@ int testfunc(struct test &blah);
 foo_t operator &(foo_t &a);
 };
 $13|/*! class */
-$0|$17476|-=: TOP LEVEL COMMENT PARSE VALUES :=-
+$0|$17749|-=: TOP LEVEL COMMENT PARSE VALUES :=-
 inHeader: 0
 inClass: 0
 inInterface: 0
@@ -37,9 +37,12 @@ inputCounter: 0
 blockOffset: 0
 fullpath: /test_suite_bogus_path/class_2.test
 -=: BLOCKPARSE PARSER STATE KEYS :=-
+$parserState->{ASLBRACEPRECURSOR} => 
+$parserState->{ASLBRACEPRECURSORTAG} => 
 $parserState->{FULLPATH} => /test_suite_bogus_path/class_2.test
 $parserState->{ISFORWARDDECLARATION} => 0
 $parserState->{NEXTTOKENNOCPP} => 0
+$parserState->{afterNL} => 2
 $parserState->{availability} => 
 $parserState->{backslashcount} => 0
 $parserState->{basetype} => 
@@ -82,8 +85,10 @@ $parserState->{occmethod} => 0
 $parserState->{occmethodname} => 
 $parserState->{occparmlabelfound} => 2
 $parserState->{onlyComments} => 0
+$parserState->{parsedParamAtBrace} => ARRAY(OBJID)
 $parserState->{parsedParamList} => ARRAY(OBJID)
 $parserState->{parsedParamParse} => 1
+$parserState->{parsedParamStateAtBrace} => ARRAY(OBJID)
 $parserState->{posstypes} => 
 $parserState->{posstypesPending} => 0
 $parserState->{pplStack} => ARRAY(OBJID)
@@ -232,7 +237,7 @@ LONG ATTRIBUTES:
     IS BLOCK: 
     OBJECT TYPE: HeaderDoc::CPPClass
     NAME: ampersand_test_class_t
-    APIUID: 
+    APIUID: //test_ref/cpp/cl/ampersand_test_class_t
     ABSTRACT: ""
     DISCUSSION: "<p>class "
     UPDATED: ""
@@ -287,7 +292,7 @@ LONG ATTRIBUTES:
         XMLTHROWS: ""
         UPDATED: ""
         LINKAGESTATE: ""
-        ACCESSCONTROL: ""
+        ACCESSCONTROL: "protected"
         AVAILABILITY: ""
         LINKUID: ""
         ORIGCLASS: ""
@@ -414,7 +419,7 @@ LONG ATTRIBUTES:
         XMLTHROWS: ""
         UPDATED: ""
         LINKAGESTATE: ""
-        ACCESSCONTROL: ""
+        ACCESSCONTROL: "protected"
         AVAILABILITY: ""
         LINKUID: ""
         ORIGCLASS: ""
@@ -627,7 +632,7 @@ END OF OBJECT
 
 
 
-$17476|-=: TOP LEVEL COMMENT PARSE VALUES :=-
+$17749|-=: TOP LEVEL COMMENT PARSE VALUES :=-
 inHeader: 0
 inClass: 0
 inInterface: 0
@@ -655,9 +660,12 @@ inputCounter: 0
 blockOffset: 0
 fullpath: /test_suite_bogus_path/class_2.test
 -=: BLOCKPARSE PARSER STATE KEYS :=-
+$parserState->{ASLBRACEPRECURSOR} => 
+$parserState->{ASLBRACEPRECURSORTAG} => 
 $parserState->{FULLPATH} => /test_suite_bogus_path/class_2.test
 $parserState->{ISFORWARDDECLARATION} => 0
 $parserState->{NEXTTOKENNOCPP} => 0
+$parserState->{afterNL} => 2
 $parserState->{availability} => 
 $parserState->{backslashcount} => 0
 $parserState->{basetype} => 
@@ -700,8 +708,10 @@ $parserState->{occmethod} => 0
 $parserState->{occmethodname} => 
 $parserState->{occparmlabelfound} => 2
 $parserState->{onlyComments} => 0
+$parserState->{parsedParamAtBrace} => ARRAY(OBJID)
 $parserState->{parsedParamList} => ARRAY(OBJID)
 $parserState->{parsedParamParse} => 1
+$parserState->{parsedParamStateAtBrace} => ARRAY(OBJID)
 $parserState->{posstypes} => 
 $parserState->{posstypesPending} => 0
 $parserState->{pplStack} => ARRAY(OBJID)
@@ -850,7 +860,7 @@ LONG ATTRIBUTES:
     IS BLOCK: 
     OBJECT TYPE: HeaderDoc::CPPClass
     NAME: ampersand_test_class_t
-    APIUID: 
+    APIUID: //test_ref/cpp/cl/ampersand_test_class_t
     ABSTRACT: ""
     DISCUSSION: "<p>class "
     UPDATED: ""
@@ -905,7 +915,7 @@ LONG ATTRIBUTES:
         XMLTHROWS: ""
         UPDATED: ""
         LINKAGESTATE: ""
-        ACCESSCONTROL: ""
+        ACCESSCONTROL: "protected"
         AVAILABILITY: ""
         LINKUID: ""
         ORIGCLASS: ""
@@ -1032,7 +1042,7 @@ LONG ATTRIBUTES:
         XMLTHROWS: ""
         UPDATED: ""
         LINKAGESTATE: ""
-        ACCESSCONTROL: ""
+        ACCESSCONTROL: "protected"
         AVAILABILITY: ""
         LINKUID: ""
         ORIGCLASS: ""

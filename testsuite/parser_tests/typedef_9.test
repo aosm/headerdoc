@@ -8,7 +8,7 @@ $46|/*!
  @typedef Wrapper2
  @abstract A struct
 */
-$0|$10914|-=: TOP LEVEL COMMENT PARSE VALUES :=-
+$0|$11094|-=: TOP LEVEL COMMENT PARSE VALUES :=-
 inHeader: 0
 inClass: 0
 inInterface: 0
@@ -36,8 +36,11 @@ inputCounter: 0
 blockOffset: 0
 fullpath: /test_suite_bogus_path/typedef_9.test
 -=: BLOCKPARSE PARSER STATE KEYS :=-
+$parserState->{ASLBRACEPRECURSOR} => 
+$parserState->{ASLBRACEPRECURSORTAG} => 
 $parserState->{FULLPATH} => /test_suite_bogus_path/typedef_9.test
 $parserState->{NEXTTOKENNOCPP} => 0
+$parserState->{afterNL} => 2
 $parserState->{availability} => 
 $parserState->{backslashcount} => 0
 $parserState->{basetype} => struct
@@ -82,8 +85,10 @@ $parserState->{occmethod} => 0
 $parserState->{occmethodname} => 
 $parserState->{occparmlabelfound} => 3
 $parserState->{onlyComments} => 0
+$parserState->{parsedParamAtBrace} => ARRAY(OBJID)
 $parserState->{parsedParamList} => ARRAY(OBJID)
 $parserState->{parsedParamParse} => 1
+$parserState->{parsedParamStateAtBrace} => ARRAY(OBJID)
 $parserState->{posstypes} =>  typedef struct
 $parserState->{posstypesPending} => 0
 $parserState->{pplStack} => ARRAY(OBJID)
@@ -124,9 +129,8 @@ extendsClass:
 implementsClass: 
 -=: LIST OF PARSED PARAMETERS :=-
 Parsed Param 0 => struct myStruct2 *data
-Parsed Param 1 => struct 
-                int value
-Parsed Param 2 => container
+Parsed Param 1 => int value
+Parsed Param 2 => struct  container
 -=: DUMP OF PARSE TREE :=-
 +---typedef
 +--- 
@@ -305,7 +309,7 @@ LONG ATTRIBUTES:
         IS BLOCK: 
         OBJECT TYPE: HeaderDoc::MinorAPIElement
         NAME: value
-        TYPE: struct                   int
+        TYPE: int
         APIUID: 
         ABSTRACT: ""
         DISCUSSION: "<p></p>"
@@ -347,7 +351,7 @@ LONG ATTRIBUTES:
         IS BLOCK: 
         OBJECT TYPE: HeaderDoc::MinorAPIElement
         NAME: container
-        TYPE: 
+        TYPE: struct
         APIUID: 
         ABSTRACT: ""
         DISCUSSION: "<p></p>"
@@ -440,7 +444,7 @@ END OF OBJECT
 
 
 
-$10914|-=: TOP LEVEL COMMENT PARSE VALUES :=-
+$11094|-=: TOP LEVEL COMMENT PARSE VALUES :=-
 inHeader: 0
 inClass: 0
 inInterface: 0
@@ -468,8 +472,11 @@ inputCounter: 0
 blockOffset: 0
 fullpath: /test_suite_bogus_path/typedef_9.test
 -=: BLOCKPARSE PARSER STATE KEYS :=-
+$parserState->{ASLBRACEPRECURSOR} => 
+$parserState->{ASLBRACEPRECURSORTAG} => 
 $parserState->{FULLPATH} => /test_suite_bogus_path/typedef_9.test
 $parserState->{NEXTTOKENNOCPP} => 0
+$parserState->{afterNL} => 2
 $parserState->{availability} => 
 $parserState->{backslashcount} => 0
 $parserState->{basetype} => struct
@@ -514,8 +521,10 @@ $parserState->{occmethod} => 0
 $parserState->{occmethodname} => 
 $parserState->{occparmlabelfound} => 3
 $parserState->{onlyComments} => 0
+$parserState->{parsedParamAtBrace} => ARRAY(OBJID)
 $parserState->{parsedParamList} => ARRAY(OBJID)
 $parserState->{parsedParamParse} => 1
+$parserState->{parsedParamStateAtBrace} => ARRAY(OBJID)
 $parserState->{posstypes} =>  typedef struct
 $parserState->{posstypesPending} => 0
 $parserState->{pplStack} => ARRAY(OBJID)
@@ -556,9 +565,8 @@ extendsClass:
 implementsClass: 
 -=: LIST OF PARSED PARAMETERS :=-
 Parsed Param 0 => struct myStruct2 *data
-Parsed Param 1 => struct 
-                int value
-Parsed Param 2 => container
+Parsed Param 1 => int value
+Parsed Param 2 => struct  container
 -=: DUMP OF PARSE TREE :=-
 +---typedef
 +--- 
@@ -737,7 +745,7 @@ LONG ATTRIBUTES:
         IS BLOCK: 
         OBJECT TYPE: HeaderDoc::MinorAPIElement
         NAME: value
-        TYPE: struct                   int
+        TYPE: int
         APIUID: 
         ABSTRACT: ""
         DISCUSSION: "<p></p>"
@@ -779,7 +787,7 @@ LONG ATTRIBUTES:
         IS BLOCK: 
         OBJECT TYPE: HeaderDoc::MinorAPIElement
         NAME: container
-        TYPE: 
+        TYPE: struct
         APIUID: 
         ABSTRACT: ""
         DISCUSSION: "<p></p>"
